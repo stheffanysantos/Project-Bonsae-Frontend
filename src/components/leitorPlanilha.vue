@@ -1,8 +1,8 @@
 <template>
   <div class="container">
-    <h1>Visualizador de Planilha</h1>
+    <h1>Validador de Planilha</h1>
 
-    <input type="file" @change="handleFileUpload" accept=".xlsx" />
+    <input type="file" @change="handleFileUpload" accept=".xlsx" class="file" />
 
     <div v-if="paginatedData.length">
       <table>
@@ -86,9 +86,10 @@ h1 {
   margin-bottom: 20px;
 }
 
-input[type="file"] {
+.file {
   display: block;
   margin: 0 auto 20px auto;
+  border: none;
 }
 
 table {

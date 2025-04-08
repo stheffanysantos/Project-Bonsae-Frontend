@@ -1,21 +1,21 @@
 <template>
-  <div class="p-4">
-    <h1 class="text-2xl font-bold mb-4">Visualizador de Planilha</h1>
+  <div class="container">
+    <h1>Visualizador de Planilha</h1>
 
-    <input type="file" @change="handleFileUpload" accept=".xlsx" class="mb-4" />
+    <input type="file" @change="handleFileUpload" accept=".xlsx" />
 
-    <div v-if="paginatedData.length" class="overflow-auto max-h-[500px]">
-      <table class="table-auto w-full border border-gray-300">
-        <thead class="bg-gray-200">
+    <div v-if="paginatedData.length">
+      <table>
+        <thead>
           <tr>
-            <th v-for="(header, index) in headers" :key="index" class="border px-4 py-2">
+            <th v-for="(header, index) in headers" :key="index">
               {{ header }}
             </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(row, rowIndex) in paginatedData" :key="rowIndex">
-            <td v-for="(header, index) in headers" :key="index" class="border px-4 py-2">
+            <td v-for="(header, index) in headers" :key="index">
               {{ row[header] }}
             </td>
           </tr>
@@ -23,16 +23,12 @@
       </table>
     </div>
 
-    <div class="mt-4 flex gap-2">
-      <button @click="currentPage--" :disabled="currentPage === 1"
-        class="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50">
+    <div class="pagination" v-if="totalPages > 1">
+      <button @click="currentPage--" :disabled="currentPage === 1">
         Anterior
       </button>
-
       <span>Página {{ currentPage }} de {{ totalPages }}</span>
-
-      <button @click="currentPage++" :disabled="currentPage === totalPages"
-        class="px-3 py-1 bg-blue-500 text-white rounded disabled:opacity-50">
+      <button @click="currentPage++" :disabled="currentPage === totalPages">
         Próxima
       </button>
     </div>
@@ -56,7 +52,6 @@ const handleFileUpload = (event) => {
   reader.onload = (e) => {
     const dataBinary = new Uint8Array(e.target.result)
     const workbook = XLSX.read(dataBinary, { type: "array" })
-
     const sheetName = workbook.SheetNames[0]
     const sheet = workbook.Sheets[sheetName]
     const jsonData = XLSX.utils.sheet_to_json(sheet)
@@ -79,7 +74,59 @@ const paginatedData = computed(() => {
 </script>
 
 <style scoped>
+.container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+input[type="file"] {
+  display: block;
+  margin: 0 auto 20px auto;
+}
+
 table {
+  width: 100%;
   border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+thead th {
+  background-color: #f2f2f2;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+tbody td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+button {
+  padding: 6px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
 }
 </style>

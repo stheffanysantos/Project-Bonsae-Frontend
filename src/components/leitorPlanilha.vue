@@ -1,66 +1,67 @@
 <template>
-  <div class="container">
-    <h1>Validador de Planilha</h1>
+  <div>
+    <div class="container">
+      <h1>Visualizador de CSV</h1>
 
-    <input type="file" @change="handleFileUpload" accept=".xlsx" class="file" />
+      <input type="file" @change="handleFileUpload" accept=".csv" />
 
-    <div v-if="paginatedData.length">
-      <table>
-        <thead>
-          <tr>
-            <th v-for="(header, index) in headers" :key="index">
-              {{ header }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, rowIndex) in paginatedData" :key="rowIndex">
-            <td v-for="(header, index) in headers" :key="index">
-              {{ row[header] }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="tabela" v-if="paginatedData.length">
+        <table>
+          <thead>
+            <tr>
+              <th v-for="(header, index) in headers" :key="index">{{ header }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, rowIndex) in paginatedData" :key="rowIndex">
+              <td v-for="(header, index) in headers" :key="index">{{ row[header] }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-    <div class="pagination" v-if="totalPages > 1">
-      <button @click="currentPage--" :disabled="currentPage === 1">
-        Anterior
-      </button>
-      <span>Página {{ currentPage }} de {{ totalPages }}</span>
-      <button @click="currentPage++" :disabled="currentPage === totalPages">
-        Próxima
-      </button>
+      <div class="pagination" v-if="totalPages > 1">
+        <button @click="currentPage--" :disabled="currentPage === 1">Anterior</button>
+        <span>Página {{ currentPage }} de {{ totalPages }}</span>
+        <button @click="currentPage++" :disabled="currentPage === totalPages">Próxima</button>
+      </div>
+
+      <div>
+        <button>Proxima Etapa</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import * as XLSX from "xlsx"
-import { ref, computed } from "vue"
+import { ref, computed } from 'vue'
 
 const data = ref([])
 const headers = ref([])
 const currentPage = ref(1)
 const itemsPerPage = 10
 
-const handleFileUpload = (event) => {
+function handleFileUpload(event) {
   const file = event.target.files[0]
   if (!file) return
 
   const reader = new FileReader()
   reader.onload = (e) => {
-    const dataBinary = new Uint8Array(e.target.result)
-    const workbook = XLSX.read(dataBinary, { type: "array" })
-    const sheetName = workbook.SheetNames[0]
-    const sheet = workbook.Sheets[sheetName]
-    const jsonData = XLSX.utils.sheet_to_json(sheet)
+    const text = e.target.result
+    const lines = text.trim().split('\n')
 
-    data.value = jsonData
-    headers.value = Object.keys(jsonData[0] || {})
+    headers.value = lines[0].split(',').map(h => h.trim())
+    data.value = lines.slice(1).map(line => {
+      const values = line.split(',').map(v => v.trim())
+      const row = {}
+      headers.value.forEach((header, index) => {
+        row[header] = values[index] ?? ''
+      })
+      return row
+    })
     currentPage.value = 1
   }
-  reader.readAsArrayBuffer(file)
+  reader.readAsText(file)
 }
 
 const totalPages = computed(() =>
@@ -75,10 +76,15 @@ const paginatedData = computed(() => {
 
 <style scoped>
 .container {
-  max-width: 800px;
-  margin: 40px auto;
+  background-color: #eeeeee;
+  margin: 10vh 10vw;
   padding: 20px;
   font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
 }
 
 h1 {
@@ -86,16 +92,19 @@ h1 {
   margin-bottom: 20px;
 }
 
-.file {
+input[type="file"] {
   display: block;
   margin: 0 auto 20px auto;
-  border: none;
+}
+
+.tabela {
+  padding: 20px;
+  margin: 10vh 10vw;
+  width: min-content;
 }
 
 table {
-  width: 100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
 }
 
 thead th {

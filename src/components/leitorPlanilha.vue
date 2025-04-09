@@ -3,7 +3,11 @@
     <div class="container">
       <h1>Visualizador de CSV</h1>
 
-      <input type="file" @change="handleFileUpload" accept=".csv" />
+      <!-- Área de arrastar e soltar -->
+      <div class="drop-area" @dragover.prevent @dragenter.prevent @drop.prevent="handleDrop">
+        <p>Arraste seu arquivo CSV aqui ou clique abaixo para selecionar</p>
+        <input type="file" @change="handleFileUpload" accept=".csv" />
+      </div>
 
       <div class="tabela" v-if="paginatedData.length">
         <table>
@@ -41,27 +45,38 @@ const headers = ref([])
 const currentPage = ref(1)
 const itemsPerPage = 10
 
+function parseCSV(text) {
+  const lines = text.trim().split('\n')
+  headers.value = lines[0].split(',').map(h => h.trim())
+  data.value = lines.slice(1).map(line => {
+    const values = line.split(',').map(v => v.trim())
+    const row = {}
+    headers.value.forEach((header, index) => {
+      row[header] = values[index] ?? ''
+    })
+    return row
+  })
+  currentPage.value = 1
+}
+
+function handleFile(file) {
+  const reader = new FileReader()
+  reader.onload = (e) => parseCSV(e.target.result)
+  reader.readAsText(file)
+}
+
 function handleFileUpload(event) {
   const file = event.target.files[0]
-  if (!file) return
-
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const text = e.target.result
-    const lines = text.trim().split('\n')
-
-    headers.value = lines[0].split(',').map(h => h.trim())
-    data.value = lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim())
-      const row = {}
-      headers.value.forEach((header, index) => {
-        row[header] = values[index] ?? ''
-      })
-      return row
-    })
-    currentPage.value = 1
+  if (file && file.name.endsWith(".csv")) {
+    handleFile(file)
   }
-  reader.readAsText(file)
+}
+
+function handleDrop(event) {
+  const file = event.dataTransfer.files[0]
+  if (file && file.name.endsWith(".csv")) {
+    handleFile(file)
+  }
 }
 
 const totalPages = computed(() =>
@@ -92,9 +107,21 @@ h1 {
   margin-bottom: 20px;
 }
 
-input[type="file"] {
-  display: block;
-  margin: 0 auto 20px auto;
+.drop-area {
+  border: 2px dashed #007bff;
+  border-radius: 8px;
+  padding: 30px;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+  transition: background-color 0.3s ease;
+}
+
+.drop-area:hover {
+  background-color: #eef5ff;
+}
+
+.drop-area input[type="file"] {
+  margin-top: 15px;
 }
 
 .tabela {

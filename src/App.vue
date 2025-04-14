@@ -1,17 +1,17 @@
 <template>
   <div id="app">
-  
-  
+    <CsvUploader />
+
   </div>
 </template>
 
 <script>
 //import HelloWorld from './components/HelloWorld.vue'
-
+import CsvUploader from './components/CsvUploader.vue';
 export default {
   name: 'App',
   components: {
-    
+    CsvUploader
   }
 }
 </script>

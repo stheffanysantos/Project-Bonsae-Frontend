@@ -27,10 +27,6 @@
         <span>Página {{ currentPage }} de {{ totalPages }}</span>
         <button @click="currentPage++" :disabled="currentPage === totalPages">Próxima</button>
       </div>
-
-      <div>
-        <button>Proxima Etapa</button>
-      </div>
     </div>
   </div>
 </template>
@@ -88,23 +84,6 @@ const paginatedData = computed(() => {
 </script>
 
 <style scoped>
-.container {
-  background-color: #eeeeee;
-  margin: 10vh 10vw;
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  border-radius: 20px;
-}
-
-h1 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
 .drop-area {
   border: 2px dashed #007bff;
   border-radius: 8px;

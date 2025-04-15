@@ -33,11 +33,11 @@
 
     <footer>
       <form class="btns" @submit.prevent="handleLogin">
-        <input type="text" placeholder="Usuário" v-model="username" />
-        <input type="password" placeholder="Senha" v-model="password" />
         <div v-if="errorMessage" class="error" style="text-align: center; color: red;">
           {{ errorMessage }}
         </div>
+        <input type="text" placeholder="Usuário" v-model="username" />
+        <input type="password" placeholder="Senha" v-model="password" />
         <button type="submit" class="btn-principal">Login</button>
       </form>
     </footer>

@@ -33,7 +33,9 @@
 
     <footer>
       <div class="btns">
-        <a href="menu-principal.html" class="btn-principal">Clique aqui</a>
+        <input type="text" placeholder="Usuario">
+        <input type="password" placeholder="Senha">
+        <button @click="goDiciplinas" class="btn-principal">Login</button>
       </div>
     </footer>
   </div>
@@ -68,6 +70,9 @@ export default {
     moveToSlide(index) {
       this.currentIndex = index;
     },
+    goDiciplinas() {
+      this.$router.push('/Disciplinas');
+    }
   },
 };
 </script>
@@ -118,6 +123,7 @@ body {
   border-bottom-left-radius: 50px;
   padding: 50px 0;
   flex-grow: 1;
+  margin-bottom: 100px;
 }
 
 .content-img img {
@@ -199,7 +205,25 @@ footer {
 }
 
 .btns {
+  display: flex;
+  flex-direction: column;
   padding-top: 20px;
+}
+
+.btns input {
+  text-align: center;
+  background-color: var(--bg-color);
+  color: rgb(0, 0, 0);
+  text-decoration: none;
+  width: 331px;
+  height: 63px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 16px;
+  transition: background-color 0.3s ease;
+  border: none;
+  margin-bottom: 15px;
 }
 
 .btn-principal {
@@ -213,6 +237,7 @@ footer {
   align-items: center;
   border-radius: 16px;
   transition: background-color 0.3s ease;
+  border: none;
 }
 
 .btn-principal:hover {

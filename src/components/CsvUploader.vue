@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="container">
+    <div class="container" style="flex-direction: column;">
       <!-- Área de arrastar e soltar -->
       <div class="drop-area" @dragover.prevent @dragenter.prevent @drop.prevent="handleDrop">
         <p>Arraste seu arquivo CSV aqui ou clique abaixo para selecionar</p>

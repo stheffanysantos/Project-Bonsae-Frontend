@@ -32,11 +32,14 @@
     </main>
 
     <footer>
-      <div class="btns">
-        <input type="text" placeholder="Usuario">
-        <input type="password" placeholder="Senha">
-        <button @click="goDiciplinas" class="btn-principal">Login</button>
-      </div>
+      <form class="btns" @submit.prevent="handleLogin">
+        <input type="text" placeholder="Usuário" v-model="username" />
+        <input type="password" placeholder="Senha" v-model="password" />
+        <div v-if="errorMessage" class="error" style="text-align: center; color: red;">
+          {{ errorMessage }}
+        </div>
+        <button type="submit" class="btn-principal">Login</button>
+      </form>
     </footer>
   </div>
 </template>
@@ -46,9 +49,12 @@ export default {
   data() {
     return {
       currentIndex: 0,
+      username: "",
+      password: "",
+      errorMessage: "",
       slides: [
         {
-          src: '../assets/imagemTelaInicial',
+          src: 'https://via.placeholder.com/800x400/00FF00/FFFFFF?text=Imagem+2',
           alt: 'Imagem 1',
         },
         {
@@ -64,15 +70,26 @@ export default {
           alt: 'Imagem 4',
         },
       ],
+      database: [
+        { username: "admin1", password: "pass1" },
+        { username: "admin2", password: "pass2" },
+        { username: "user1", password: "pass1" },
+      ],
     };
   },
   methods: {
     moveToSlide(index) {
       this.currentIndex = index;
     },
-    goDiciplinas() {
-      this.$router.push('/Disciplinas');
-    }
+    handleLogin() {
+      const user = this.database.find(u => u.username === this.username);
+      if (user && user.password === this.password) {
+        this.errorMessage = "";
+        this.$router.push('/Disciplinas');
+      } else {
+        this.errorMessage = "Usuário ou senha inválidos.";
+      }
+    },
   },
 };
 </script>

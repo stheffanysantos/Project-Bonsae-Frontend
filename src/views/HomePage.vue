@@ -48,7 +48,7 @@ export default {
       currentIndex: 0,
       slides: [
         {
-          src: 'scr/imagemTelaInicial.png',
+          src: '../assets/imagemTelaInicial',
           alt: 'Imagem 1',
         },
         {

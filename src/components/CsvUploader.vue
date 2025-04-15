@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="container" style="flex-direction: column;">
+    <div class="containerCsv" style="flex-direction: column;">
       <!-- Área de arrastar e soltar -->
       <div class="drop-area" @dragover.prevent @dragenter.prevent @drop.prevent="handleDrop">
         <p>Arraste seu arquivo CSV aqui ou clique abaixo para selecionar</p>
@@ -82,65 +82,3 @@ const paginatedData = computed(() => {
   return data.value.slice(start, start + itemsPerPage)
 })
 </script>
-
-<style scoped>
-.drop-area {
-  border: 2px dashed #007bff;
-  border-radius: 8px;
-  padding: 30px;
-  margin-bottom: 20px;
-  background-color: #f9f9f9;
-  transition: background-color 0.3s ease;
-}
-
-.drop-area:hover {
-  background-color: #eef5ff;
-}
-
-.drop-area input[type="file"] {
-  margin-top: 15px;
-}
-
-.tabela {
-  padding: 20px;
-  margin: 10vh 10vw;
-  width: min-content;
-}
-
-table {
-  border-collapse: collapse;
-}
-
-thead th {
-  background-color: #f2f2f2;
-  padding: 10px;
-  border: 1px solid #ccc;
-}
-
-tbody td {
-  padding: 10px;
-  border: 1px solid #ccc;
-  text-align: left;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-button {
-  padding: 6px 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:disabled {
-  background-color: #aaa;
-  cursor: not-allowed;
-}
-</style>

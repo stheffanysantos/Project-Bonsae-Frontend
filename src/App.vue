@@ -10,8 +10,10 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 nav {
   margin-bottom: 20px;
 }
+
+@import './assets/css/style.css';
 </style>

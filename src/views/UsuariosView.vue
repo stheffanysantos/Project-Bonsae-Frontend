@@ -7,17 +7,17 @@
           <h1 class="concluido">1</h1>
           <h3>Periodo letivo</h3>
         </li>
-        <hr>
+        <p><i class="arrow right"></i></p>
         <li>
           <h1 class="concluido">2</h1>
           <h3>Diciplina</h3>
         </li>
-        <hr>
+        <p><i class="arrow right"></i></p>
         <li>
           <h1 class="concluido">3</h1>
           <h3>Turmas</h3>
         </li>
-        <hr>
+        <p><i class="arrow right"></i></p>
         <li>
           <h1 class="concluido">4</h1>
           <h3>Usuarios</h3>

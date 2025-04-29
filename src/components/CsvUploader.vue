@@ -2,9 +2,18 @@
   <div>
     <div class="containerCsv" style="flex-direction: column;">
       <!-- Área de arrastar e soltar -->
-      <div class="drop-area" @dragover.prevent @dragenter.prevent @drop.prevent="handleDrop">
-        <p>Arraste seu arquivo CSV aqui ou clique abaixo para selecionar</p>
-        <input type="file" @change="handleFileUpload" accept=".csv,.CSV" />
+      <div
+        class="drop-area"
+        @dragover.prevent
+        @dragenter.prevent
+        @drop.prevent="handleDrop"
+      >
+        <p>Arraste seu arquivo CSV ou Excel aqui ou clique abaixo para selecionar</p>
+        <input
+          type="file"
+          @change="handleFileUpload"
+          accept=".csv,.CSV,.xlsx,.XLSX,.xls,.XLS"
+        />
       </div>
 
       <!-- Exibição de erros -->
@@ -21,22 +30,42 @@
         <table>
           <thead>
             <tr>
-              <th v-for="(header, index) in headers" :key="index">{{ header }}</th>
+              <th v-for="(header, index) in headers" :key="index">
+                {{ header }}
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(row, rowIndex) in paginatedData" :key="rowIndex">
-              <td v-for="(key, index) in keys" :key="index">{{ row[key] }}</td>
+            <tr
+              v-for="(row, rowIndex) in paginatedData"
+              :key="rowIndex"
+            >
+              <td v-for="(key, index) in keys" :key="index">
+                {{ row[key] }}
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <!-- Paginação -->
-      <div class="pagination" v-if="!errors.length && totalPages > 1">
-        <button @click="currentPage--" :disabled="currentPage === 1">Anterior</button>
+      <div
+        class="pagination"
+        v-if="!errors.length && totalPages > 1"
+      >
+        <button
+          @click="currentPage--"
+          :disabled="currentPage === 1"
+        >
+          Anterior
+        </button>
         <span>Página {{ currentPage }} de {{ totalPages }}</span>
-        <button @click="currentPage++" :disabled="currentPage === totalPages">Próxima</button>
+        <button
+          @click="currentPage++"
+          :disabled="currentPage === totalPages"
+        >
+          Próxima
+        </button>
       </div>
     </div>
   </div>
@@ -44,102 +73,107 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { validatePeriodoCsv } from '@/utils/validators/periodoCsvValidator'
+import * as XLSX from 'xlsx'
+import { validatePeriodoCsv }    from '@/utils/validators/periodoCsvValidator'
+import { validateDisciplinaCsv } from '@/utils/validators/disciplinasCsvValidator'
+import { validateTurmaCsv }      from '@/utils/validators/turmasCsvValidator'
+import { validateUsuarioCsv }    from '@/utils/validators/usuariosCsvValidator'
 
-const data = ref([])
-const headers = ref([])
-const keys = ref([])
-const errors = ref([])
+const data        = ref([])
+const headers     = ref([])
+const keys        = ref([])
+const errors      = ref([])
 const currentPage = ref(1)
-const itemsPerPage = 10
+const itemsPerPage= 10
 
-// Normaliza o nome das colunas do csv
 function normalizeHeader(texto) {
-  if (typeof texto !== 'string') {
-    return '';
-  }
-
-  const textoSemAcento = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Remove acentos
-  const textoSemEspacos = textoSemAcento.replace(/[^a-zA-Z0-9]+/g, ' '); // Substitui múltiplos espaços e caracteres especiais por um único espaço
-  const palavras = textoSemEspacos.trim().split(' '); // Remove espaços extras e divide em palavras
-
-  if (palavras.length === 0) {
-    return '';
-  }
-
-  let camelCase = palavras[0].toLowerCase(); // Primeira palavra em minúsculo
-
+  if (typeof texto !== 'string') return ''
+  const textoSemAcento = texto.normalize('NFD').replace(/[̀-ͯ]/g, '')
+  const textoSemEspacos = textoSemAcento.replace(/[^a-zA-Z0-9]+/g, ' ')
+  const palavras = textoSemEspacos.trim().split(' ')
+  if (!palavras.length) return ''
+  let camelCase = palavras[0].toLowerCase()
   for (let i = 1; i < palavras.length; i++) {
-    const palavra = palavras[i];
-    camelCase += palavra.charAt(0).toUpperCase() + palavra.slice(1).toLowerCase(); // Capitaliza a primeira letra e o resto em minúsculo
+    const p = palavras[i]
+    camelCase += p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()
   }
-
-  return camelCase.replace(/ç/g, 'c'); // Substitui 'ç' por 'c'
+  return camelCase.replace(/ç/g, 'c')
 }
 
 function parseCSV(text) {
-  console.log("parseCSV")
-  const lines = text.trim().split('\n');
-
-  // Nomes das colunas originais
-  const raw = lines[0].split(/[,;]/).map(h => h.trim());
-
-  // Nomes normalizados das colunas (removendo acento e colocando em camelCase)
-  const normalized = raw.map(normalizeHeader);
+  const lines      = text.trim().split('\n')
+  const raw        = lines[0].split(/[,;]/).map(h => h.trim())
+  const normalized = raw.map(normalizeHeader)
 
   headers.value = raw
-  keys.value = normalized
+  keys.value    = normalized
 
   data.value = lines.slice(1).map(line => {
     const values = line.split(/[,;]/).map(v => v.trim())
     const row = {}
-
-    // iterando sobre cada coluna (com o nome normalizado)
-    normalized.forEach((key, index) => {
-      row[key] = values[index] ?? ''
-      console.log("Valor inserido em " + key + ": " + values[index])
-      // console.log("coluna " + index + ": " + key + "\n")
+    normalized.forEach((key, idx) => {
+      row[key] = values[idx] ?? ''
     })
-    console.log("Retornando essa linha: " + row)
     return row
   })
   currentPage.value = 1
 }
 
 function handleFile(file) {
-  console.log("handleFile")
+  const nome = file.name.toLowerCase()
+  const ext  = nome.split('.').pop()
   const reader = new FileReader()
-  reader.onload = (e) => {
-    // parseia o CSV
-    parseCSV(e.target.result)
 
-    // chamando o validador passando o array de objetos
-    const { valid, errors: errs } = validatePeriodoCsv(data.value)
-    console.log(errs)
-    if (!valid) {
-      // adicionando a lista de erros
-      errors.value = errs
-    } else {
-      // limpando a lista de erros
-      errors.value = []
+  reader.onload = (e) => {
+    let csvText = e.target.result
+
+    // converter Excel para CSV, se necessário
+    if (['xlsx','xls'].includes(ext)) {
+      const dataArray = new Uint8Array(csvText)
+      const workbook  = XLSX.read(dataArray, { type: 'array' })
+      csvText = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]])
     }
+
+    // parse e popula data.value, headers.value e keys.value
+    parseCSV(csvText)
+
+    // escolhe o validator com base no nome do arquivo
+    let validator
+    if (nome.includes('usuario') || nome.includes('usuarios')) {
+      validator = validateUsuarioCsv
+    } else if (nome.includes('disciplina') || nome.includes('disciplinas')) {
+      validator = validateDisciplinaCsv
+    } else if (nome.includes('turma') || nome.includes('turmas')) {
+      validator = validateTurmaCsv
+    } else {
+      // se for outro tipo, considera período
+      validator = validatePeriodoCsv
+    }
+
+    const { valid, errors: errs } = validator(data.value)
+    errors.value = valid ? [] : errs
   }
-  reader.readAsText(file)
+
+  // lê o arquivo de acordo com a extensão
+  if (ext === 'csv') {
+    reader.readAsText(file)
+  } else if (['xlsx','xls'].includes(ext)) {
+    reader.readAsArrayBuffer(file)
+  } else {
+    errors.value = [{ row: null, field: null, message: 'Formato de arquivo não suportado'}]
+  }
 }
 
 function handleFileUpload(event) {
-  console.log("handleFileUpload")
   const file = event.target.files[0]
-  console.log("tentando entrar no if")
-  if (file && (file.name.endsWith(".csv") || file.name.endsWith(".CSV"))) {
-    console.log("chama o handleFile")
+  if (file && /\.(csv|xlsx|xls)$/i.test(file.name)) {
     handleFile(file)
   }
 }
 
 function handleDrop(event) {
   const file = event.dataTransfer.files[0]
-  if (file && (file.name.endsWith(".csv") || file.name.endsWith(".CSV"))) {
+  if (file && /\.(csv|xlsx|xls)$/i.test(file.name)) {
     handleFile(file)
   }
 }
@@ -155,11 +189,40 @@ const paginatedData = computed(() => {
 </script>
 
 <style scoped>
+.drop-area {
+  padding: 1.5em;
+  border: 2px dashed #ccc;
+  text-align: center;
+  cursor: pointer;
+}
 .errors {
   margin: 1em 0;
   padding: 1em;
   border: 1px solid #e53e3e;
   background: #fff5f5;
   color: #9b2c2c;
+}
+.tabela {
+  margin-top: 1em;
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: 0.5em;
+  border: 1px solid #ddd;
+}
+.pagination {
+  margin-top: 1em;
+  display: flex;
+  justify-content: center;
+  gap: 1em;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

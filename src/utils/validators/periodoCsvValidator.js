@@ -87,4 +87,4 @@ export function validatePeriodoCsv(records) {
     });
 
     return { valid: errors.length === 0, errors };
-}
+}  

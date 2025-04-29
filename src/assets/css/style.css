@@ -308,3 +308,33 @@ button:disabled {
   transform: rotate(-45deg);
   -webkit-transform: rotate(-45deg);
 }
+
+.contentMenu{
+  background-color: #f1efef8c;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.contentMenu div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-direction: column;
+  background-color: #aaa;
+  padding: 5px;
+  border: #1E1E1E 1px solid;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btMenu:hover{
+  background-color: #ccc;
+}
+
+.contentMenu .imgBMenu{
+  width: 10vw;
+}

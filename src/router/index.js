@@ -6,6 +6,7 @@ import PeriodoView from '@/views/PeriodoView.vue'
 import TurmasView from '@/views/TurmasView.vue'
 import UsuariosView from '@/views/UsuariosView.vue'
 import VinculosView from '@/views/VinculosView.vue'
+import Menu from '@/views/Menu.vue'
 
 Vue.use(Router)
 
@@ -16,6 +17,11 @@ export default new Router({
       path: '/',
       name: 'Home',
       component: Home
+    },
+    {
+      path: '/menu',
+      name: 'menu',
+      component: Menu
     },
     {
       path: '/disciplinas',

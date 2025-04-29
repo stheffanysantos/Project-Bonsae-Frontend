@@ -85,7 +85,7 @@ export default {
       const user = this.database.find(u => u.username === this.username);
       if (user && user.password === this.password) {
         this.errorMessage = "";
-        this.$router.push('/periodo');
+        this.$router.push('/menu');
       } else {
         this.errorMessage = "Usuário ou senha inválidos.";
       }

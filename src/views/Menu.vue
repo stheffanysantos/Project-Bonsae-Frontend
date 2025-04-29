@@ -2,7 +2,7 @@
   <div class="containerUploader">
     <h1>Menu</h1>
     <div class="contentMenu">
-      <div class="btMenu">
+      <div class="btMenu" @click="goHistorico">
         <h3>Historico</h3>
         <img class="imgBMenu" src="../assets/img/historicoIcon.svg" alt="">
       </div>
@@ -23,6 +23,9 @@ export default {
   methods: {
     goPeriodo() {
       this.$router.push('/periodo');
+    },
+    goHistorico() {
+      this.$router.push('/historico');
     }
   }
 }

@@ -318,7 +318,7 @@ button:disabled {
   margin-top: 20px;
 }
 
-.contentMenu div {
+.contentMenu .btMenu {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -329,6 +329,7 @@ button:disabled {
   box-shadow: 4px 4px 14px -9px rgba(0,0,0,0.75);
   border-radius: 10px;
   cursor: pointer;
+  font-weight: bolder;
 }
 
 .btMenu:hover{

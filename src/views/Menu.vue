@@ -6,7 +6,7 @@
         <h3>Historico</h3>
         <img class="imgBMenu" src="../assets/img/historicoIcon.svg" alt="">
       </div>
-      <div class="btMenu">
+      <div class="btMenu" @click="goPeriodo">
         <h3>uploader</h3>
         <img class="imgBMenu" src="../assets/img/uploadeIcon.svg" alt="">
       </div>
@@ -21,8 +21,8 @@ export default {
 
   },
   methods: {
-    goDiciplinas() {
-      this.$router.push('/Disciplinas');
+    goPeriodo() {
+      this.$router.push('/periodo');
     }
   }
 }

@@ -324,15 +324,15 @@ button:disabled {
   align-items: center;
   text-align: center;
   flex-direction: column;
-  background-color: #aaa;
+  background-color: #c5c5c5;
   padding: 5px;
-  border: #1E1E1E 1px solid;
+  box-shadow: 4px 4px 14px -9px rgba(0,0,0,0.75);
   border-radius: 10px;
   cursor: pointer;
 }
 
 .btMenu:hover{
-  background-color: #ccc;
+  background-color: #656DFF;
 }
 
 .contentMenu .imgBMenu{

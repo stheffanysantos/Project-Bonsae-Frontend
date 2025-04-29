@@ -1,5 +1,5 @@
 <template>
-    <main>
+    <main class="home-wrapper">
       <div class="containerHome">
         <div class="containerHome-Text">
           <div class="content-text">
@@ -85,135 +85,120 @@ export default {
 
 @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
 
-:root {
-  --bg-color: #FFFFFF;
-  --cor-secundaria: #656DFF;
-  --preto: #1E1E1E;
-  --highlight-color: #656DFF;
-}
-
-* {
-  box-sizing: border-box;
-  font-family: "Almarai", sans-serif;
-}
-
-body {
+.home-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #f0f4ff, #ffffff);
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: center;
+  padding: 40px;
 }
 
 .containerHome {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-
+  flex-wrap: wrap;
+  max-width: 1100px;
+  background-color: #fff;
+  border-radius: 32px;
+  box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
 }
 
-
-.containerHome-Text{
-  position: relative;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  text-align: left;
-  background-color: var(--bg-color);
-  border-bottom-right-radius: 50px;
-  border-bottom-left-radius: 50px;
-  padding: 50px 0;
-  flex-grow: 1;
-  margin-bottom: 100px;
-  flex-direction: column;
+.containerHome-Text {
+  flex: 1;
+  min-width: 300px;
+  padding: 60px;
+  background: var(--bg-color);
 }
-
 
 .content-text {
-  padding-top: 200px;
   font-size: 24px;
   font-weight: 700;
   max-width: 500px;
   display: flex;
   flex-direction: column;
-  margin-right: 500px;
-}
-
-.content-text p {
-  font-weight: 300;
-  font-size: 15px;
-  color: #747474;
-  padding-bottom: 15px;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  background-color: #ccc;
-  border-radius: 50%;
-  display: inline-block;
-  transition: background-color 0.3s;
-  cursor: pointer;
-}
-
-.dot.active {
-  background-color: #000;
-}
-
-.highlight {
-  color: var(--highlight-color);
+  margin: 0;
 }
 
 .content-text h1 {
-  white-space: nowrap;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
 }
 
-footer {
-  background-color: var(--cor-secundaria);
-  height: 100px;
+.text-subtitle {
+  font-size: 1rem;
+  font-weight: 300;
+  color: #747474;
+}
+
+.content-img img {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+}
+
+.form-component {
+  flex: 1;
+  min-width: 300px;
+  padding: 60px;
+  background-color: #f8f9ff;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  color: #fff;
 }
 
 .btnsHome {
+  width: 100%;
+  max-width: 350px;
   display: flex;
   flex-direction: column;
-  padding-top: 20px;
+  align-items: center;
 }
 
 .btnsHome input {
-  text-align: center;
-  background-color: var(--bg-color);
-  color: rgb(0, 0, 0);
-  text-decoration: none;
-  width: 331px;
-  height: 63px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 16px;
-  transition: background-color 0.3s ease;
-  border: none;
-  margin-bottom: 15px;
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  border: 1px solid #dcdcdc;
+  padding: 0 15px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  transition: border 0.3s;
+}
+
+.btnsHome input:focus {
+  border-color: var(--cor-secundaria);
+  outline: none;
 }
 
 .btn-principal {
-  background-color: var(--preto);
+  width: 100%;
+  height: 50px;
+  background-color: #4d56d1;
   color: white;
-  text-decoration: none;
-  width: 331px;
-  height: 63px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 16px;
-  transition: background-color 0.3s ease;
+  font-weight: 600;
   border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .btn-principal:hover {
-  background-color: #333333;
+  background-color: #656bc4;
 }
+
+.error {
+  background-color: #ffdddd;
+  border: 1px solid red;
+  color: red;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  width: 100%;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
 
 </style>

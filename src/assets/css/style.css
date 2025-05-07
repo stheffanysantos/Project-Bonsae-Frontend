@@ -187,3 +187,34 @@ button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
+
+.contentMenu{
+  background-color: #f1efef8c;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.contentMenu .btMenu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-direction: column;
+  background-color: #c5c5c5;
+  padding: 5px;
+  box-shadow: 4px 4px 14px -9px rgba(0,0,0,0.75);
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bolder;
+}
+
+.btMenu:hover{
+  background-color: #656DFF;
+}
+
+.contentMenu .imgBMenu{
+  width: 10vw;
+}

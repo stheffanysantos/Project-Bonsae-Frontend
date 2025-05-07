@@ -22,10 +22,15 @@
           <h1 class="concluido">4</h1>
           <h3>Usuarios</h3>
         </li>
+        <p><i class="arrow right"></i></p>
+        <li>
+          <h1 class="">5</h1>
+          <h3>Vinculos</h3>
+        </li>
       </ul>
       <CsvUploader />
     </div>
-    <button>Finalizar</button>
+    <button @click="goVinculos">Proximo</button>
   </div>
 </template>
 
@@ -37,8 +42,8 @@ export default {
     CsvUploader,
   },
   methods: {
-    goUsuarios() {
-      this.$router.push('/usuarios');
+    goVinculos() {
+      this.$router.push('/vinculos');
     }
   }
 }

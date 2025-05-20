@@ -12,6 +12,7 @@
             <th>Data de Início</th>
             <th>Data de Término</th>
             <th>Status</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -23,6 +24,11 @@
             <td>
               <span v-if="processo.status === 'Concluído'" class="statusProcesso success">Concluído</span>
               <span v-else-if="processo.status === 'Em Andamento'" class="statusProcesso info">Em Andamento</span>
+            </td>
+            <td>
+              <button v-if="processo.status === 'Em Andamento'" class="btnProcessos danger">Cancelar</button>
+              <button v-if="processo.status === 'Em Andamento'" class="btnProcessos primary">Continuar</button>
+              <button v-if="processo.status === 'Concluído'" class="btnProcessos neutral">Visualizar</button>
             </td>
           </tr>
         </tbody>

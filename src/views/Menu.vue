@@ -22,7 +22,7 @@ export default {
   },
   methods: {
     goPeriodo() {
-      this.$router.push('/periodo');
+      this.$router.push('/processos');
     },
     goHistorico() {
       this.$router.push('/historico');

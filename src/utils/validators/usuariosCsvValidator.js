@@ -19,7 +19,7 @@ const PERFIS_VALIDOS = [
             requiredMsg: 'Informe o nome do usuário.'
         },
         {
-            key: 'email',
+            key: 'eMail',
             requiredMsg: 'Informe o E-mail.'
         },
         {

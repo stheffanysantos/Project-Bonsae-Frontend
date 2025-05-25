@@ -6,9 +6,6 @@ import PeriodoView from '@/views/PeriodoView.vue'
 import TurmasView from '@/views/TurmasView.vue'
 import UsuariosView from '@/views/UsuariosView.vue'
 import VinculosView from '@/views/VinculosView.vue'
-import Menu from '@/views/Menu.vue'
-import Historico from '@/views/Historico.vue'
-import ProcessosView from '@/views/ProcessosView.vue'
 
 Vue.use(Router)
 
@@ -19,16 +16,6 @@ export default new Router({
       path: '/',
       name: 'Home',
       component: Home
-    },
-    {
-      path: '/menu',
-      name: 'menu',
-      component: Menu
-    },
-    {
-      path: '/historico',
-      name: 'historico',
-      component: Historico
     },
     {
       path: '/disciplinas',
@@ -54,11 +41,6 @@ export default new Router({
       path: '/vinculos',
       name: 'vinculos',
       component: VinculosView
-    },
-    {
-      path: '/processos',
-      name: 'processos',
-      component: ProcessosView
     },
   ]
 })

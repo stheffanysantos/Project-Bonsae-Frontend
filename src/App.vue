@@ -14,5 +14,6 @@ export default {
 nav {
   margin-bottom: 20px;
 }
-@import url(assets/css/style.css);
+
+@import './assets/css/style.css';
 </style>

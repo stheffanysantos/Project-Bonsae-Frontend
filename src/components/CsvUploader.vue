@@ -79,17 +79,31 @@
           </button>
         </div>
       </div>
+
+      <!-- Botão Enviar -->
+      <div class="send-button" style="margin-top: 1rem; text-align: right;">
+        <button
+          @click="sendData"
+          :disabled="errors.length > 0 || !data.length"
+          class="btn btn-primary"
+        >
+          Enviar
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
+import api from '@/services/api'
 import * as XLSX from 'xlsx'
 import { validatePeriodoCsv }    from '@/utils/validators/periodoCsvValidator'
 import { validateDisciplinaCsv } from '@/utils/validators/disciplinasCsvValidator'
 import { validateTurmaCsv }      from '@/utils/validators/turmasCsvValidator'
 import { validateUsuarioCsv }    from '@/utils/validators/usuariosCsvValidator'
+import { validateVinculoCsv }    from '@/utils/validators/vinculosCsvValidator'
+import { validateVinculoCsvProf } from '@/utils/validators/vinculosCsvValidatorProf'
 
 // Dados e estado reativos
 const data = ref([])
@@ -98,6 +112,7 @@ const keys = ref([])
 const errors = ref([])
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
+const currentType = ref('') // tipo de planilha: usuario, disciplina, etc.
 
 // Validador atual (setado após upload)
 let currentValidator = validatePeriodoCsv
@@ -141,6 +156,13 @@ function normalizeHeader(texto) {
   return camelCase.replace(/ç/g, 'c')
 }
 
+function toIsoDate(brDate) {
+  if (!brDate || typeof brDate !== 'string') return brDate;
+  const [dia, mes, ano] = brDate.split('/');
+  if (!dia || !mes || !ano) return brDate;
+  return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+}
+
 // Parsing de CSV para array de objetos
 function parseCSV(text) {
   const lines = text.trim().split('\n')
@@ -154,6 +176,7 @@ function parseCSV(text) {
     const row = {}
     normalized.forEach((key, idx) => {
       row[key] = values[idx] ?? ''
+      console.log(key);
     })
     return row
   })
@@ -173,6 +196,48 @@ function onCellBlur() {
   errors.value = valid ? [] : errs
 }
 
+
+// Função para enviar dados corr
+async function sendData() {
+  // Revalida antes de enviar
+  const { valid, errors: errs } = currentValidator(data.value)
+  if (!valid) {
+    errors.value = errs
+    return
+  }
+
+  // Bota datas para formato ISO
+  try {
+      data.value.forEach((item) => {
+      item.dataInicial = toIsoDate(item.dataInicial);
+      item.dataFinal = toIsoDate(item.dataFinal);
+    })
+  }
+  catch {
+    'N tem data pra formatar'
+  }
+
+  try {
+    console.log(data.value[0].valid)
+
+    const payload = {
+      type: currentType.value,
+      data: data.value
+    }
+    await api.post('/csv-upload', payload)
+    alert('Dados enviados com sucesso!')
+    // Opcional: resetar estado
+    data.value = []
+    headers.value = []
+    keys.value = []
+    currentPage.value = 1
+    currentType.value = ''
+  } catch (err) {
+    console.error(err)
+    alert('Erro ao enviar dados: ' + err.message)
+  }
+}
+
 // Lógica de leitura de arquivo (CSV/XLSX)
 function handleFile(file) {
   const nome = file.name.toLowerCase()
@@ -188,21 +253,29 @@ function handleFile(file) {
       csvText = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]])
     }
 
-    // Converte para dados
     parseCSV(csvText)
 
-    // Seleciona validador conforme nome do arquivo
+    // Define type e validador
     if (nome.includes('usuario')) {
+      currentType.value = 'usuario'
       currentValidator = validateUsuarioCsv
+    } else if (nome.includes('vinculo') && nome.includes('aluno')){
+      currentType.value = 'vinculo_aluno_turma'
+      currentValidator = validateVinculoCsv
     } else if (nome.includes('disciplina')) {
+      currentType.value = 'disciplina'
       currentValidator = validateDisciplinaCsv
-    } else if (nome.includes('turma')) {
-      currentValidator = validateTurmaCsv
-    } else {
+    } else if (nome.includes('vinculo') && nome.includes('professor')) {
+      currentType.value = 'vinculo_professor_turma'
+      currentValidator = validateVinculoCsvProf
+    } else if (nome.includes('periodo')){
+      currentType.value = 'periodo'
       currentValidator = validatePeriodoCsv
+    } else {
+      currentType.value = 'turma'
+      currentValidator = validateTurmaCsv
     }
 
-    // Executa validação inicial
     const { valid, errors: errs } = currentValidator(data.value)
     errors.value = valid ? [] : errs
   }
@@ -232,65 +305,200 @@ function handleDrop(event) {
 </script>
 
 <style scoped>
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.5s;
+}
+.btn:hover {
+  background-color: #4caf50;
+}
+.btn-primary {
+  background-color: #DDEB9D;
+  color: #fff;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Área de drop */
 .drop-area {
-  padding: 1.5em;
-  border: 2px dashed #ccc;
+  padding: 1.5rem;
+  border: 2px dashed #e0e0e0;
+  border-radius: 8px;
   text-align: center;
   cursor: pointer;
+  transition: border-color 0.3s, background 0.3s;
 }
+.drop-area:hover {
+  border-color: #4caf50;
+  background: #fafafa;
+}
+
+/* Erros modernizados */
 .errors {
-  margin: 1em 0;
-  padding: 1em;
-  border: 1px solid #e53e3e;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+  padding: 1rem;
   background: #fff5f5;
-  color: #9b2c2c;
-  max-height: 200px;
+  border-left: 4px solid #e57373;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  color: #b71c1c;
+  font-size: 0.95rem;
+  line-height: 1.4;
   overflow-y: auto;
+  max-height: 200px;
 }
+
+/* Ícone de erro */
+.errors::before {
+  content: "⚠️";
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-top: 0.1rem;
+}
+
+/* Lista interna de mensagens */
+.errors ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.errors li {
+  margin-bottom: 0.5rem;
+}
+.errors li:last-child {
+  margin-bottom: 0;
+}
+/* Wrapper da tabela */
 .tabela {
-  margin-top: 1em;
+  margin-top: 1rem;
   overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
+
+/* Tabela */
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
 }
-th,
+
+/* Cabeçalho */
+th {
+  position: sticky;
+  top: 0;
+  background: #fafafa;
+  color: #555;
+  font-weight: 600;
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+/* Células */
 td {
-  padding: 0.5em;
-  border: 1px solid #ddd;
+  padding: 0.75rem;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
 }
+
+/* Zebra stripes sutis */
+tr:nth-child(even) td {
+  background: #fcfcfc;
+}
+
+/* Hover da linha */
+tr:hover td {
+  background: #f5f5f5;
+}
+
+/* Células inválidas */
 .invalid-cell {
-  background-color: #ffe6e6;
-  cursor: help;
+  background-color: #fff5f5 !important;
+  position: relative;
 }
+.invalid-cell::after {
+  content: attr(data-error);
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  padding: 0.25rem 0.5rem;
+  
+  color: #fff;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.invalid-cell:hover::after {
+  opacity: 1;
+}
+
+/* Input de edição */
 .edit-cell {
   width: 100%;
-  box-sizing: border-box;
-  padding: 0.25em;
+  padding: 0.5rem;
   border: 1px solid #ccc;
-  border-radius: 2px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.edit-cell:focus {
+  outline: none;
+  border-color: #4caf50;
 }
 .invalid-cell .edit-cell {
-  background-color: #ffe6e6;
+  border-color: #e57373;
 }
+
+/* Paginação */
 .pagination {
-  margin-top: 1em;
+  margin-top: 1rem;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 0.5em;
+  gap: 1rem;
+  font-size: 0.9rem;
 }
-button:disabled {
+
+/* Botões de paginação */
+.pagination button {
+  background: none;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+  background-color: #DDEB9D;
+}
+.pagination button:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+.pagination button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Números de página */
 .page-numbers {
   display: flex;
-  gap: 0.5em;
+  gap: 0.5rem;
 }
 .page-numbers button.active {
-  font-weight: bold;
+  font-weight: 600;
   text-decoration: underline;
 }
 </style>

@@ -33,12 +33,7 @@
 
     <footer>
       <form class="btnsHome" @submit.prevent="handleLogin">
-        <div v-if="errorMessage" class="error" style="text-align: center; color: red;">
-          {{ errorMessage }}
-        </div>
-        <input type="text" placeholder="Usuário" v-model="username" />
-        <input type="password" placeholder="Senha" v-model="password" />
-        <button type="submit" class="btn-principal">Login</button>
+        <button @click="goProcessos" class="btn-principal">Entrar</button>
       </form>
     </footer>
   </div>
@@ -69,26 +64,15 @@ export default {
           src: 'https://via.placeholder.com/800x400/FFFF00/FFFFFF?text=Imagem+4',
           alt: 'Imagem 4',
         },
-      ],
-      database: [
-        { username: "admin1", password: "pass1" },
-        { username: "admin2", password: "pass2" },
-        { username: "user1", password: "pass1" },
-      ],
+      ]
     };
   },
   methods: {
     moveToSlide(index) {
       this.currentIndex = index;
     },
-    handleLogin() {
-      const user = this.database.find(u => u.username === this.username);
-      if (user && user.password === this.password) {
-        this.errorMessage = "";
-        this.$router.push('/processos');
-      } else {
-        this.errorMessage = "Usuário ou senha inválidos.";
-      }
+    goProcessos() {
+      this.$router.push('/processos');
     },
   },
 };

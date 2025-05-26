@@ -4,7 +4,7 @@
   --bg-color: #FFFFFF;
   --cor-secundaria: #FFFDF6;
   --preto: #1E1E1E;
-  --highlight-color: #A0C878;
+  --highlight-color: #0098f0;
 }
 
 * {
@@ -44,6 +44,7 @@ body {
   padding: 50px 0;
   flex-grow: 1;
   margin-bottom: 100px;
+  box-shadow: 1px 12px 27px -12px rgba(0,0,0,0.42);
 }
 
 .contentImgHome img {

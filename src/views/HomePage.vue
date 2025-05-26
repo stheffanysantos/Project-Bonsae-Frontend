@@ -8,23 +8,15 @@
             <span class="highlight">importação CSV</span> !
           </h1>
           <p>
-            A space that unites conscious individuals who <br />
-            collaborate to reduce their carbon footprint.
+            Importe seus arquivos CSV de forma rápida, segura e sem complicações. <br />
           </p>
 
-          <!-- Indicadores do carrossel (bolinhas) -->
-          <div class="carousel-indicators">
-            <span v-for="(dot, index) in slides.length" :key="index" class="dot"
-              :class="{ active: currentIndex === index }" @click="moveToSlide(index)"></span>
-          </div>
         </div>
 
         <div class="contentImgHome">
-          <!-- Carrossel de Imagens -->
           <div class="carousel">
-            <div v-for="(slide, index) in slides" :key="index" class="carousel-item"
-              :class="{ active: currentIndex === index }">
-              <img :src="slide.src" :alt="slide.alt" />
+            <div class="carousel-item">
+              <img src="../assets/img/imagemTelaInicial.png" alt="imagem inicial" />
             </div>
           </div>
         </div>
@@ -43,34 +35,9 @@
 export default {
   data() {
     return {
-      currentIndex: 0,
-      username: "",
-      password: "",
-      errorMessage: "",
-      slides: [
-        {
-          src: 'https://via.placeholder.com/800x400/00FF00/FFFFFF?text=Imagem+2',
-          alt: 'Imagem 1',
-        },
-        {
-          src: 'https://via.placeholder.com/800x400/00FF00/FFFFFF?text=Imagem+2',
-          alt: 'Imagem 2',
-        },
-        {
-          src: 'https://via.placeholder.com/800x400/0000FF/FFFFFF?text=Imagem+3',
-          alt: 'Imagem 3',
-        },
-        {
-          src: 'https://via.placeholder.com/800x400/FFFF00/FFFFFF?text=Imagem+4',
-          alt: 'Imagem 4',
-        },
-      ]
     };
   },
   methods: {
-    moveToSlide(index) {
-      this.currentIndex = index;
-    },
     goProcessos() {
       this.$router.push('/processos');
     },

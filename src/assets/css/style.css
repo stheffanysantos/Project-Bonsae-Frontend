@@ -5,6 +5,7 @@
   --cor-secundaria: #FFFDF6;
   --preto: #1E1E1E;
   --highlight-color: #0098f0;
+  --base-color : #1161d8;
 }
 
 * {
@@ -76,10 +77,13 @@ body {
 }
 
 .carousel-item {
-  display: none;
   width: 100%;
   height: auto;
   text-align: center;
+}
+
+.carousel-item img {
+  width: 50vw;
 }
 
 .carousel-item.active {
@@ -109,7 +113,7 @@ body {
 }
 
 .highlight {
-  color: var(--highlight-color);
+  color: var(--base-color);
 }
 
 .content-text h1 {
@@ -148,7 +152,7 @@ footer {
 }
 
 .btn-principal {
-  background-color: var(--preto);
+  background-color: var(--base-color);
   color: white;
   text-decoration: none;
   width: 331px;
@@ -162,7 +166,7 @@ footer {
 }
 
 .btn-principal:hover {
-  background-color: #333333;
+  background-color: var(--highlight-color);
 }
 
 .containerCsv{

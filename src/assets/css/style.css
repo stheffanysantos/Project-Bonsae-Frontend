@@ -24,6 +24,15 @@ body {
   justify-content: space-between;
 }
 
+.bodyScreen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+}
+
 .fundo-principal{
   height: 100vh;
   background-color: var(--bg-colo-sec);
@@ -392,8 +401,18 @@ button:disabled {
 }
 
 .botaoNewProcessos{
-  position: relative;
-  right:-60vw;
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 1.5rem;
+  background: var(--base-color);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s;
 }
 
 .statusProcesso {

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="fundo-principal">
     <main>
       <div class="containerHome">
         <div class="content-text">

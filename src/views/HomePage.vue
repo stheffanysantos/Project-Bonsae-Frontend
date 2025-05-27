@@ -13,11 +13,8 @@
 </template>
 
 <script>
+
 export default {
-  data() {
-    return {
-    };
-  },
   methods: {
     goProcessos() {
       this.$router.push('/processos');

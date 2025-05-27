@@ -30,15 +30,10 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-image: url(../img/fundoBonsae.png);
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center;
 }
 
 .fundo-principal{
   height: 100vh;
-  background-color: var(--bg-colo-sec);
 }
 
 .gradient-text {
@@ -300,7 +295,6 @@ button:disabled {
 }
 
 .content{
-  background-color: #f1efef8c;
   display: flex;
   justify-content: center;
   align-items: center;

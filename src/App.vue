@@ -1,11 +1,15 @@
 <template>
-  <div id="app">
+  <FundoAnimado id="app">
     <router-view />
-  </div>
+  </FundoAnimado>
 </template>
 
 <script>
+import FundoAnimado from './components/fundoAnimado.vue';
 export default {
+  components: {
+    FundoAnimado,
+  },
   name: 'App'
 }
 </script>

@@ -85,7 +85,7 @@ const headers = ref([])
 const keys = ref([])
 const errors = ref([])
 const currentPage = ref(1)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(5)
 const currentType = ref('') // tipo de planilha: usuario, disciplina, etc.
 
 // Validador atual (setado após upload)

@@ -30,12 +30,31 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: var(--bg-color);
+  background-image: url(../img/fundoBonsae.png);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 }
 
 .fundo-principal{
   height: 100vh;
   background-color: var(--bg-colo-sec);
+}
+
+.gradient-text {
+  font-size: 4rem;
+  font-weight: bold;
+  background: linear-gradient(270deg, var(--base-color), var(--highlight-color),var(--base-color));
+  background-size: 800% 800%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-animation 8s ease infinite;
+}
+
+@keyframes gradient-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .container-blue {
@@ -49,18 +68,19 @@ body {
 }
 
 .containerHome {
-  position: relative;
   display: flex;
-  justify-content: space-around;
+  flex-direction: column;
   align-items: center;
-  text-align: left;
-  background-color: var(--bg-color);
-  border-bottom-right-radius: 50px;
-  border-bottom-left-radius: 50px;
-  padding: 50px 0;
-  flex-grow: 1;
-  margin-bottom: 100px;
-  box-shadow: 1px 12px 27px -12px rgba(0,0,0,0.42);
+  justify-content: center;
+  background-color: var(--grey);
+  padding: 15vh 15vw;
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  color: #333;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .contentImgHome img {

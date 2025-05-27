@@ -2,18 +2,9 @@
   <div>
     <div class="containerCsv" style="flex-direction: column;">
       <!-- Área de arrastar e soltar -->
-      <div
-        class="drop-area"
-        @dragover.prevent
-        @dragenter.prevent
-        @drop.prevent="handleDrop"
-      >
+      <div class="drop-area" @dragover.prevent @dragenter.prevent @drop.prevent="handleDrop">
         <p>Arraste seu arquivo CSV ou Excel aqui ou clique abaixo para selecionar</p>
-        <input
-          type="file"
-          @change="handleFileUpload"
-          accept=".csv,.CSV,.xlsx,.XLSX,.xls,.XLS"
-        />
+        <input type="file" @change="handleFileUpload" accept=".csv,.CSV,.xlsx,.XLSX,.xls,.XLS" />
       </div>
 
       <!-- Exibição de erros gerais com scroll -->
@@ -37,20 +28,11 @@
           </thead>
           <tbody>
             <tr v-for="(row, rowIndex) in paginatedData" :key="rowIndex">
-              <td
-                v-for="(key, index) in keys"
-                :key="index"
-                :class="{ 'invalid-cell': getCellError(rowIndex, key) }"
-                :title="getCellError(rowIndex, key)"
-              >
+              <td v-for="(key, index) in keys" :key="index" :class="{ 'invalid-cell': getCellError(rowIndex, key) }"
+                :title="getCellError(rowIndex, key)">
                 <template v-if="getCellError(rowIndex, key)">
-                  <input
-                    type="text"
-                    v-model="row[key]"
-                    @blur="onCellBlur"
-                    @keyup.enter="onCellBlur"
-                    class="edit-cell"
-                  />
+                  <input type="text" v-model="row[key]" @blur="onCellBlur" @keyup.enter="onCellBlur"
+                    class="edit-cell" />
                 </template>
                 <template v-else>
                   {{ row[key] }}
@@ -69,12 +51,8 @@
 
         <!-- Botões numéricos -->
         <div class="page-numbers">
-          <button
-            v-for="page in totalPages"
-            :key="page"
-            @click="goToPage(page)"
-            :class="{ active: currentPage === page }"
-          >
+          <button v-for="page in totalPages" :key="page" @click="goToPage(page)"
+            :class="{ active: currentPage === page }">
             {{ page }}
           </button>
         </div>
@@ -82,11 +60,7 @@
 
       <!-- Botão Enviar -->
       <div class="send-button" style="margin-top: 1rem; text-align: right;">
-        <button
-          @click="sendData"
-          :disabled="errors.length > 0 || !data.length"
-          class="btn btn-primary"
-        >
+        <button @click="sendData" :disabled="errors.length > 0 || !data.length" class="btn btn-primary">
           Enviar
         </button>
       </div>
@@ -98,11 +72,11 @@
 import { ref, computed } from 'vue'
 import api from '@/services/api'
 import * as XLSX from 'xlsx'
-import { validatePeriodoCsv }    from '@/utils/validators/periodoCsvValidator'
+import { validatePeriodoCsv } from '@/utils/validators/periodoCsvValidator'
 import { validateDisciplinaCsv } from '@/utils/validators/disciplinasCsvValidator'
-import { validateTurmaCsv }      from '@/utils/validators/turmasCsvValidator'
-import { validateUsuarioCsv }    from '@/utils/validators/usuariosCsvValidator'
-import { validateVinculoCsv }    from '@/utils/validators/vinculosCsvValidator'
+import { validateTurmaCsv } from '@/utils/validators/turmasCsvValidator'
+import { validateUsuarioCsv } from '@/utils/validators/usuariosCsvValidator'
+import { validateVinculoCsv } from '@/utils/validators/vinculosCsvValidator'
 import { validateVinculoCsvProf } from '@/utils/validators/vinculosCsvValidatorProf'
 
 // Dados e estado reativos
@@ -208,7 +182,7 @@ async function sendData() {
 
   // Bota datas para formato ISO
   try {
-      data.value.forEach((item) => {
+    data.value.forEach((item) => {
       item.dataInicial = toIsoDate(item.dataInicial);
       item.dataFinal = toIsoDate(item.dataFinal);
     })
@@ -259,7 +233,7 @@ function handleFile(file) {
     if (nome.includes('usuario')) {
       currentType.value = 'usuario'
       currentValidator = validateUsuarioCsv
-    } else if (nome.includes('vinculo') && nome.includes('aluno')){
+    } else if (nome.includes('vinculo') && nome.includes('aluno')) {
       currentType.value = 'vinculo_aluno_turma'
       currentValidator = validateVinculoCsv
     } else if (nome.includes('disciplina')) {
@@ -268,7 +242,7 @@ function handleFile(file) {
     } else if (nome.includes('vinculo') && nome.includes('professor')) {
       currentType.value = 'vinculo_professor_turma'
       currentValidator = validateVinculoCsvProf
-    } else if (nome.includes('periodo')){
+    } else if (nome.includes('periodo')) {
       currentType.value = 'periodo'
       currentValidator = validatePeriodoCsv
     } else {
@@ -312,13 +286,16 @@ function handleDrop(event) {
   cursor: pointer;
   transition: background-color 0.5s;
 }
+
 .btn:hover {
-  background-color: #4caf50;
+  background-color: #0098f0;
 }
+
 .btn-primary {
-  background-color: #DDEB9D;
+  background-color: #1161d8;
   color: #fff;
 }
+
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -333,8 +310,9 @@ function handleDrop(event) {
   cursor: pointer;
   transition: border-color 0.3s, background 0.3s;
 }
+
 .drop-area:hover {
-  border-color: #4caf50;
+  border-color: #0098f0;
   background: #fafafa;
 }
 
@@ -371,18 +349,21 @@ function handleDrop(event) {
   padding: 0;
   list-style: none;
 }
+
 .errors li {
   margin-bottom: 0.5rem;
 }
+
 .errors li:last-child {
   margin-bottom: 0;
 }
+
 /* Wrapper da tabela */
 .tabela {
   margin-top: 1rem;
   overflow-x: auto;
   border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Tabela */
@@ -427,13 +408,14 @@ tr:hover td {
   background-color: #fff5f5 !important;
   position: relative;
 }
+
 .invalid-cell::after {
   content: attr(data-error);
   position: absolute;
   bottom: 100%;
   left: 0;
   padding: 0.25rem 0.5rem;
-  
+
   color: #fff;
   font-size: 0.75rem;
   border-radius: 4px;
@@ -442,6 +424,7 @@ tr:hover td {
   pointer-events: none;
   transition: opacity 0.2s;
 }
+
 .invalid-cell:hover::after {
   opacity: 1;
 }
@@ -456,10 +439,12 @@ tr:hover td {
   box-sizing: border-box;
   transition: border-color 0.2s;
 }
+
 .edit-cell:focus {
   outline: none;
-  border-color: #4caf50;
+  border-color: #0098f0;
 }
+
 .invalid-cell .edit-cell {
   border-color: #e57373;
 }
@@ -482,11 +467,13 @@ tr:hover td {
   cursor: pointer;
   border-radius: 4px;
   transition: background 0.2s;
-  background-color: #DDEB9D;
+  background-color: #1161d8;
 }
+
 .pagination button:hover:not(:disabled) {
-  background: #f0f0f0;
+  background: #0098f0;
 }
+
 .pagination button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -497,6 +484,7 @@ tr:hover td {
   display: flex;
   gap: 0.5rem;
 }
+
 .page-numbers button.active {
   font-weight: 600;
   text-decoration: underline;

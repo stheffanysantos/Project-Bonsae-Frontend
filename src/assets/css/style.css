@@ -307,12 +307,15 @@ button:disabled {
   background-color: var(--grey);
   padding: 15vh 15vw;
   max-width: 1000px;
+  max-height: 90vh;
   margin: 2rem auto;
   padding: 1.5rem;
   font-family: 'Helvetica Neue', Arial, sans-serif;
   color: #333;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .content{

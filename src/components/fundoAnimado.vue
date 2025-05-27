@@ -19,7 +19,7 @@
 <style scoped>
 .wallpaper-container {
   background: white;
-  overflow: scroll;
+  overflow: hidden;
 }
 
 .logo {

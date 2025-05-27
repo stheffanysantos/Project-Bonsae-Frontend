@@ -16,10 +16,6 @@
   </div>
 </template>
 
-<script setup>
-// Nada por enquanto
-</script>
-
 <style scoped>
 .wallpaper-container {
   background: white;

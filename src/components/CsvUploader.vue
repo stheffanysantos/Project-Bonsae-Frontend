@@ -168,6 +168,7 @@ export default {
       const { valid, errors } = this.currentValidator(this.data)
       this.errors = valid ? [] : errors
     },
+    //TODO integrar
     async sendData() {
       const { valid, errors } = this.currentValidator(this.data)
       if (!valid) {

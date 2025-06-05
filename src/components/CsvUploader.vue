@@ -68,8 +68,7 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue'
+<script>
 import api from '@/services/api'
 import * as XLSX from 'xlsx'
 import { validatePeriodoCsv } from '@/utils/validators/periodoCsvValidator'
@@ -79,204 +78,211 @@ import { validateUsuarioCsv } from '@/utils/validators/usuariosCsvValidator'
 import { validateVinculoCsv } from '@/utils/validators/vinculosCsvValidator'
 import { validateVinculoCsvProf } from '@/utils/validators/vinculosCsvValidatorProf'
 
-// Dados e estado reativos
-const data = ref([])
-const headers = ref([])
-const keys = ref([])
-const errors = ref([])
-const currentPage = ref(1)
-const itemsPerPage = ref(10)
-const currentType = ref('') // tipo de planilha: usuario, disciplina, etc.
+export default {
+  name: 'CsvUploader',
 
-// Validador atual (setado após upload)
-let currentValidator = validatePeriodoCsv
-
-// Computed para paginação
-const totalPages = computed(() => Math.ceil(data.value.length / itemsPerPage.value))
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  return data.value.slice(start, start + itemsPerPage.value)
-})
-
-// Funções de navegação de página
-function goToPage(page) {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
-}
-function prevPage() {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-function nextPage() {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
-}
-
-// Normaliza cabeçalhos para chaves
-function normalizeHeader(texto) {
-  if (typeof texto !== 'string') return ''
-  const textoSemAcento = texto.normalize('NFD').replace(/[̀-\u036f]/g, '')
-  const textoSemEspacos = textoSemAcento.replace(/[^a-zA-Z0-9]+/g, ' ')
-  const palavras = textoSemEspacos.trim().split(' ')
-  if (!palavras.length) return ''
-  let camelCase = palavras[0].toLowerCase()
-  for (let i = 1; i < palavras.length; i++) {
-    const p = palavras[i]
-    camelCase += p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()
-  }
-  return camelCase.replace(/ç/g, 'c')
-}
-
-function toIsoDate(brDate) {
-  if (!brDate || typeof brDate !== 'string') return brDate;
-  const [dia, mes, ano] = brDate.split('/');
-  if (!dia || !mes || !ano) return brDate;
-  return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-}
-
-// Parsing de CSV para array de objetos
-function parseCSV(text) {
-  const lines = text.trim().split('\n')
-  const raw = lines[0].split(/[,;]/).map(h => h.trim())
-  const normalized = raw.map(normalizeHeader)
-
-  headers.value = raw
-  keys.value = normalized
-  data.value = lines.slice(1).map(line => {
-    const values = line.split(/[,;]/).map(v => v.trim())
-    const row = {}
-    normalized.forEach((key, idx) => {
-      row[key] = values[idx] ?? ''
-      console.log(key);
-    })
-    return row
-  })
-  currentPage.value = 1
-}
-
-// Obtém mensagem de erro para célula
-function getCellError(rowIndex, key) {
-  const absoluteIndex = (currentPage.value - 1) * itemsPerPage.value + rowIndex
-  const err = errors.value.find(e => e.row - 1 === absoluteIndex && e.field === key)
-  return err ? err.message : ''
-}
-
-// Ao editar e sair do input, revalida todo o dataset
-function onCellBlur() {
-  const { valid, errors: errs } = currentValidator(data.value)
-  errors.value = valid ? [] : errs
-}
-
-
-// Função para enviar dados corr
-async function sendData() {
-  // Revalida antes de enviar
-  const { valid, errors: errs } = currentValidator(data.value)
-  if (!valid) {
-    errors.value = errs
-    return
-  }
-
-  // Bota datas para formato ISO
-  try {
-    data.value.forEach((item) => {
-      item.dataInicial = toIsoDate(item.dataInicial);
-      item.dataFinal = toIsoDate(item.dataFinal);
-    })
-  }
-  catch {
-    'N tem data pra formatar'
-  }
-
-  try {
-    console.log(data.value[0].valid)
-
-    const payload = {
-      type: currentType.value,
-      data: data.value
+  props: {
+    categoria: {
+      type: String,
+      required: true
     }
-    await api.post('/csv-upload', payload)
-    alert('Dados enviados com sucesso!')
-    // Opcional: resetar estado
-    data.value = []
-    headers.value = []
-    keys.value = []
-    currentPage.value = 1
-    currentType.value = ''
-  } catch (err) {
-    console.error(err)
-    alert('Erro ao enviar dados: ' + err.message)
-  }
-}
+  },
 
-// Lógica de leitura de arquivo (CSV/XLSX)
-function handleFile(file) {
-  const nome = file.name.toLowerCase()
-  const ext = nome.split('.').pop()
-  const reader = new FileReader()
-
-  reader.onload = (e) => {
-    let csvText = e.target.result
-
-    if (['xlsx', 'xls'].includes(ext)) {
-      const dataArray = new Uint8Array(csvText)
-      const workbook = XLSX.read(dataArray, { type: 'array' })
-      csvText = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]])
+  data() {
+    return {
+      data: [],
+      headers: [],
+      keys: [],
+      errors: [],
+      currentPage: 1,
+      itemsPerPage: 10,
+      currentType: '',
+      currentValidator: () => ({ valid: true, errors: [] }) // inicial neutro
     }
+  },
 
-    parseCSV(csvText)
-
-    // Define type e validador
-    if (nome.includes('usuario')) {
-      currentType.value = 'usuario'
-      currentValidator = validateUsuarioCsv
-    } else if (nome.includes('vinculo') && nome.includes('aluno')) {
-      currentType.value = 'vinculo_aluno_turma'
-      currentValidator = validateVinculoCsv
-    } else if (nome.includes('disciplina')) {
-      currentType.value = 'disciplina'
-      currentValidator = validateDisciplinaCsv
-    } else if (nome.includes('vinculo') && nome.includes('professor')) {
-      currentType.value = 'vinculo_professor_turma'
-      currentValidator = validateVinculoCsvProf
-    } else if (nome.includes('periodo')) {
-      currentType.value = 'periodo'
-      currentValidator = validatePeriodoCsv
-    } else {
-      currentType.value = 'turma'
-      currentValidator = validateTurmaCsv
+  computed: {
+    totalPages() {
+      return Math.ceil(this.data.length / this.itemsPerPage)
+    },
+    paginatedData() {
+      const start = (this.currentPage - 1) * this.itemsPerPage
+      return this.data.slice(start, start + this.itemsPerPage)
     }
+  },
 
-    const { valid, errors: errs } = currentValidator(data.value)
-    errors.value = valid ? [] : errs
-  }
+  methods: {
+    goToPage(page) {
+      if (page >= 1 && page <= this.totalPages) this.currentPage = page
+    },
+    prevPage() {
+      if (this.currentPage > 1) this.currentPage--
+    },
+    nextPage() {
+      if (this.currentPage < this.totalPages) this.currentPage++
+    },
+    normalizeHeader(texto) {
+      if (typeof texto !== 'string') return ''
+      const textoSemAcento = texto.normalize('NFD').replace(/[̀-\u036f]/g, '')
+      const textoSemEspacos = textoSemAcento.replace(/[^a-zA-Z0-9]+/g, ' ')
+      const palavras = textoSemEspacos.trim().split(' ')
+      if (!palavras.length) return ''
+      let camelCase = palavras[0].toLowerCase()
+      for (let i = 1; i < palavras.length; i++) {
+        const p = palavras[i]
+        camelCase += p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()
+      }
+      return camelCase.replace(/ç/g, 'c')
+    },
+    toIsoDate(brDate) {
+      if (!brDate || typeof brDate !== 'string') return brDate
+      const [dia, mes, ano] = brDate.split('/')
+      if (!dia || !mes || !ano) return brDate
+      return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`
+    },
+    parseCSV(text) {
+      const lines = text.trim().split('\n')
+      const raw = lines[0].split(/[,;]/).map(h => h.trim())
+      const normalized = raw.map(this.normalizeHeader)
 
-  if (ext === 'csv') {
-    reader.readAsText(file)
-  } else if (['xlsx', 'xls'].includes(ext)) {
-    reader.readAsArrayBuffer(file)
-  } else {
-    errors.value = [{ row: null, field: null, message: 'Formato de arquivo não suportado' }]
-  }
-}
+      this.headers = raw
+      this.keys = normalized
+      this.data = lines.slice(1).map(line => {
+        const values = line.split(/[,;]/).map(v => v.trim())
+        const row = {}
+        normalized.forEach((key, idx) => {
+          row[key] = values[idx] ?? ''
+        })
+        return row
+      })
+      this.currentPage = 1
 
-function handleFileUpload(event) {
-  const file = event.target.files[0]
-  if (file && /\.(csv|xlsx|xls)$/i.test(file.name)) {
-    handleFile(file)
-  }
-}
+      this.validarComCategoria()
+    },
+    getCellError(rowIndex, key) {
+      const absoluteIndex = (this.currentPage - 1) * this.itemsPerPage + rowIndex
+      const err = this.errors.find(e => e.row - 1 === absoluteIndex && e.field === key)
+      return err ? err.message : ''
+    },
+    onCellBlur() {
+      const { valid, errors } = this.currentValidator(this.data)
+      this.errors = valid ? [] : errors
+    },
+    async sendData() {
+      const { valid, errors } = this.currentValidator(this.data)
+      if (!valid) {
+        this.errors = errors
+        return
+      }
 
-function handleDrop(event) {
-  const file = event.dataTransfer.files[0]
-  if (file && /\.(csv|xlsx|xls)$/i.test(file.name)) {
-    handleFile(file)
+      try {
+        this.data.forEach(item => {
+          item.dataInicial = this.toIsoDate(item.dataInicial)
+          item.dataFinal = this.toIsoDate(item.dataFinal)
+        })
+      } catch {
+        console.log("erro")
+      }
+
+      try {
+        const payload = {
+          type: this.currentType,
+          data: this.data
+        }
+        await api.post('/csv-upload', payload)
+        alert('Dados enviados com sucesso!')
+        this.data = []
+        this.headers = []
+        this.keys = []
+        this.currentPage = 1
+        this.currentType = ''
+      } catch (err) {
+        console.error(err)
+        alert('Erro ao enviar dados: ' + err.message)
+      }
+    },
+    handleFile(file) {
+      const nome = file.name.toLowerCase()
+      const ext = nome.split('.').pop()
+      const reader = new FileReader()
+
+      reader.onload = (e) => {
+        let csvText = e.target.result
+        if (['xlsx', 'xls'].includes(ext)) {
+          const dataArray = new Uint8Array(csvText)
+          const workbook = XLSX.read(dataArray, { type: 'array' })
+          csvText = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]])
+        }
+        this.parseCSV(csvText)
+      }
+
+      if (ext === 'csv') {
+        reader.readAsText(file)
+      } else if (['xlsx', 'xls'].includes(ext)) {
+        reader.readAsArrayBuffer(file)
+      } else {
+        this.errors = [{ row: null, field: null, message: 'Formato de arquivo não suportado' }]
+      }
+    },
+    handleFileUpload(event) {
+      const file = event.target.files[0]
+      if (file && /\.(csv|xlsx|xls)$/i.test(file.name)) {
+        this.handleFile(file)
+      }
+    },
+    handleDrop(event) {
+      const file = event.dataTransfer.files[0]
+      if (file && /\.(csv|xlsx|xls)$/i.test(file.name)) {
+        this.handleFile(file)
+      }
+    },
+    validarComCategoria() {
+      switch (this.categoria) {
+        case 'usuario':
+          this.currentValidator = validateUsuarioCsv
+          this.currentType = 'usuario'
+          break
+        case 'vinculo_aluno_turma':
+          this.currentValidator = validateVinculoCsv
+          this.currentType = 'vinculo_aluno_turma'
+          break
+        case 'vinculo_professor_turma':
+          this.currentValidator = validateVinculoCsvProf
+          this.currentType = 'vinculo_professor_turma'
+          break
+        case 'disciplina':
+          this.currentValidator = validateDisciplinaCsv
+          this.currentType = 'disciplina'
+          break
+        case 'periodo':
+          this.currentValidator = validatePeriodoCsv
+          this.currentType = 'periodo'
+          break
+        case 'turma':
+          this.currentValidator = validateTurmaCsv
+          this.currentType = 'turma'
+          break
+        default:
+          this.currentValidator = () => ({ valid: true, errors: [] })
+          this.currentType = ''
+      }
+
+      const { valid, errors } = this.currentValidator(this.data)
+      this.errors = valid ? [] : errors
+    }
+  },
+
+  watch: {
+    categoria: {
+      immediate: true,
+      handler() {
+        this.validarComCategoria()
+      }
+    }
   }
 }
 </script>
+
 
 <style scoped>
 .btn {

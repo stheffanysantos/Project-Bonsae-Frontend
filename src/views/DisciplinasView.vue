@@ -29,7 +29,7 @@
             <h3>Vinculos</h3>
           </li>
         </ul>
-        <CsvUploader />
+        <CsvUploader categoria="disciplina" />
       </div>
       <button class="botaoNext" @click="goTurmas">Proximo</button>
     </div>

@@ -168,7 +168,6 @@ export default {
       const { valid, errors } = this.currentValidator(this.data)
       this.errors = valid ? [] : errors
     },
-    //TODO integrar
     async sendData() {
       const { valid, errors } = this.currentValidator(this.data)
       if (!valid) {
@@ -177,21 +176,38 @@ export default {
       }
 
       try {
+        // Converte datas, se houver campos esperados
         this.data.forEach(item => {
-          item.dataInicial = this.toIsoDate(item.dataInicial)
-          item.dataFinal = this.toIsoDate(item.dataFinal)
+          if ('dataInicial' in item) item.dataInicial = this.toIsoDate(item.dataInicial)
+          if ('dataFinal' in item) item.dataFinal = this.toIsoDate(item.dataFinal)
         })
-      } catch {
-        console.log("erro")
+      } catch (e) {
+        console.warn("Erro ao converter datas", e)
       }
 
       try {
-        const payload = {
-          type: this.currentType,
-          data: this.data
+        // Mapeamento de categoria para endpoint específico
+        // TODO arrumar endpoint e adicionar id processo
+        const endpointMap = {
+          usuario: '/usuarios',
+          disciplina: '/disciplinas',
+          turma: '/turmas',
+          periodo: '/periodos',
+          vinculo_aluno_turma: '/vinculos/alunos',
+          vinculo_professor_turma: '/vinculos/professores'
         }
-        await api.post('/csv-upload', payload)
+
+        const endpoint = endpointMap[this.currentType]
+        if (!endpoint) {
+          alert('Categoria de CSV não suportada.')
+          return
+        }
+
+        // Envia diretamente o array, não um objeto com chave 'data'
+        await api.post(endpoint, this.data)
         alert('Dados enviados com sucesso!')
+
+        // Resetar estado
         this.data = []
         this.headers = []
         this.keys = []

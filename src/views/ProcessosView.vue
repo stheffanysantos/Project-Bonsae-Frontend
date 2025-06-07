@@ -47,19 +47,15 @@
 </template>
 
 <script>
+import api from '@/services/api'
+
 export default {
   name: "TabelaImportacoes",
   data() {
     return {
       paginaAtual: 1,
       itensPorPagina: 10,
-      processos: Array.from({ length: 30 }, (_, i) => ({
-        id: i + 1,
-        periodo: `202${Math.floor(i / 10)}.1`,
-        inicio: '2025-01-01',
-        fim: '2025-06-30',
-        status: i % 2 === 0 ? 'Concluído' : 'Em Andamento',
-      })),
+      processos: []
     };
   },
   computed: {
@@ -70,12 +66,37 @@ export default {
       const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
       const fim = inicio + this.itensPorPagina;
       return this.processos.slice(inicio, fim);
-    },
+    }
   },
   methods: {
-    goPeriodo() {
-      this.$router.push('/periodo');
+    async fetchProcessos() {
+      try {
+        const res = await api.get('/processos');
+        this.processos = res.data;
+      } catch (error) {
+        console.error('Erro ao buscar processos:', error);
+        alert('Erro ao carregar processos.');
+      }
+    },
+    async goPeriodo() {
+      try {
+        const res = await api.post('/processos');
+        const processoId = res.data._id;
+        this.$router.push({ name: 'importar-periodo', params: { processoId } });
+      } catch (error) {
+        console.error('Erro ao criar processo:', error);
+        alert('Erro ao iniciar novo processo.');
+      }
+    },
+    formatarData(dataISO) {
+      return new Date(dataISO).toLocaleDateString('pt-BR');
+    },
+    formatarStatus(status) {
+      return status === 'CONCLUIDO' ? 'Concluído' : 'Em Andamento';
     }
+  },
+  mounted() {
+    this.fetchProcessos();
   }
 };
 </script>

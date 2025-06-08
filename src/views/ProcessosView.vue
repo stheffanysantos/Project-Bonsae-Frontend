@@ -33,9 +33,9 @@
           <tbody>
             <tr v-for="processo in processosPaginados" :key="processo._id">
               <td>{{ processo.identificacao }}</td>
-              <td>--</td> <!-- Preencha quando houver campo "periodo" disponível -->
+              <td>{{ formatarPeriodo(processo.periodo) }}</td>
               <td>{{ formatarData(processo.dataInicio) }}</td>
-              <td>--</td> <!-- Data de término ainda não fornecida pela API -->
+              <td>{{ formatarData(processo.dataFim) }}</td> <!-- Data de término ainda não fornecida pela API -->
               <td>
                 <span :class="['statusProcesso', processo.status === 'CONCLUIDO' ? 'success' : 'info']">
                   {{ formatarStatus(processo.status) }}
@@ -48,6 +48,7 @@
                 </button>
                 <button v-if="processo.status === 'EM_ANDAMENTO'" class="btnProcessos primary">Continuar</button>
                 <button v-if="processo.status === 'CONCLUIDO'" class="btnProcessos neutral">Visualizar</button>
+                <button v-if="processo.status === 'ABORTADO'" class="btnProcessos danger">Cancelado</button>
               </td>
             </tr>
           </tbody>
@@ -134,10 +135,18 @@ export default {
       }
     },
     formatarData(dataISO) {
+      if (!dataISO) return '--';
       return new Date(dataISO).toLocaleDateString('pt-BR');
     },
     formatarStatus(status) {
+      if (!status) return 'Desconhecido';
+      status = status.toUpperCase();
+      if (status === 'ABORTADO') return 'Cancelado';
       return status === 'CONCLUIDO' ? 'Concluído' : 'Em Andamento';
+    },
+    formatarPeriodo(periodo) {
+      if (!periodo) return '--';
+      return periodo.toUpperCase().replace('-', ' ');
     }
   },
   mounted() {

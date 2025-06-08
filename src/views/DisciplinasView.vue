@@ -29,7 +29,7 @@
             <h3>Vinculos</h3>
           </li>
         </ul>
-        <CsvUploader categoria="disciplina" />
+        <CsvUploader :processoID="processoID" :periodoLetivoID="periodoLetivoID" categoria="disciplina" />
       </div>
       <button class="botaoNext" @click="goTurmas">Proximo</button>
     </div>
@@ -42,6 +42,12 @@ export default {
   name: 'App',
   components: {
     CsvUploader,
+  },
+  data() {
+    return {
+      processoID: this.$route.params.processoId,     // Exemplo, seu ID real aqui
+      periodoLetivoID: this.$route.params.periodoId, // Exemplo, seu ID real aqui
+    };
   },
   methods: {
     goTurmas() {

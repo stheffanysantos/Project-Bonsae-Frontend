@@ -83,22 +83,25 @@ export default {
 
       try {
         const payload = {
-          periodoLetivo: this.form.periodoLetivo,
-          dataInicial: toIsoDate(this.form.dataInicial),
-          dataFinal: toIsoDate(this.form.dataFinal),
+          processoID: this.$route.params.processoId,
+          identificacao: this.form.periodoLetivo.trim(), // ou outro campo apropriado
+          periodoLetivo: 'SEMESTRE-1', // ou this.form.periodoLetivoTipo se usar <select>
+          dataInicial: new Date(toIsoDate(this.form.dataInicial) + 'T00:00:00.000Z'),
+          dataFim: new Date(toIsoDate(this.form.dataFinal) + 'T23:59:59.999Z'),
         };
+
+        console.log('Payload enviado:', payload); // <-- debug
+
         const { data } = await criarPeriodo(payload);
         this.$emit('periodo-criado', data);
         this.resetForm();
-
-        // Dispara o toast de sucesso
-        this.showSuccess = true
-        setTimeout(() => {
-          this.showSuccess = false
-        }, 3000)
+        this.showSuccess = true;
+        setTimeout(() => this.showSuccess = false, 3000);
 
       } catch (e) {
+        console.error('Erro:', e.response?.data || e);
         this.errors.form = [e.response?.data?.message || 'Erro ao criar período'];
+
       }
     },
     resetForm() {

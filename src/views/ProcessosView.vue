@@ -116,8 +116,6 @@ export default {
         // Reset e fecha modal
         this.novaIdentificacao = '';
         this.mostrarModal = false;
-
-        // TODO arrumar a rota
         await this.fetchProcessos();
         this.$router.push({ name: 'periodo', params: { processoId } });
 

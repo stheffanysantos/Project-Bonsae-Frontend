@@ -184,33 +184,39 @@ export default {
           if ('dataFinal' in item) item.dataFinal = this.toIsoDate(item.dataFinal)
         })
 
-        const dataComIDs = this.data.map(item => {
-          const newItem = { ...item }
-          delete newItem.periodoLetivoIdentificacao
-          if ('disciplina' in newItem) {
-            newItem.nome = newItem.disciplina
-            delete newItem.disciplina
-          }
-          if ('codigoDaDisciplina' in newItem) {
-            newItem.codigo = newItem.codigoDaDisciplina
-            delete newItem.codigoDaDisciplina
-          }
-          if ('dataFinal' in newItem) {
-            newItem.dataFim = newItem.dataFinal
-            delete newItem.dataFinal
-          }
-          if ('estado' in newItem) {
-            delete newItem.estado
-          }
-          if ('categoria' in newItem) {
-            newItem.categoria = "CURSO"
-          }
-          return {
-            ...newItem,
-            processoID: this.processoID,
-            periodoLetivoID: this.periodoLetivoID
-          }
-        })
+        let dataComIDs = [...this.data]
+
+        switch (this.categoria) {
+          case 'disciplina':
+            dataComIDs = this.data.map(item => {
+              const newItem = { ...item }
+              delete newItem.periodoLetivoIdentificacao
+              if ('disciplina' in newItem) {
+                newItem.nome = newItem.disciplina
+                delete newItem.disciplina
+              }
+              if ('codigoDaDisciplina' in newItem) {
+                newItem.codigo = newItem.codigoDaDisciplina
+                delete newItem.codigoDaDisciplina
+              }
+              if ('dataFinal' in newItem) {
+                newItem.dataFim = newItem.dataFinal
+                delete newItem.dataFinal
+              }
+              if ('estado' in newItem) {
+                delete newItem.estado
+              }
+              if ('categoria' in newItem) {
+                newItem.categoria = "CURSO"
+              }
+              return {
+                ...newItem,
+                processoID: this.processoID,
+                periodoLetivoID: this.periodoLetivoID
+              }
+            })
+        }
+
 
         const payloads = {
           disciplina: { disciplinas: Array.from(dataComIDs) },
@@ -229,6 +235,23 @@ export default {
           vinculo_professor_turma: '/vinculos/professores'
         }
 
+        const proxEtapa = {
+          usuario: 'vinculos',
+          vinculo_professor_turma: 'vinculo_professor_turma',
+          disciplina: 'turmas',
+          turma: 'usuarios'
+        }
+
+        const proxProps = {
+          disciplina: {
+            processoId: this.processoID,
+            disciplinaCodigo: this._id
+          },
+
+        }
+
+        const propsts = proxProps[this.currentType]
+        const proxRota = proxEtapa[this.currentType]
         const endpoint = endpoints[this.currentType]
         const payload = payloads[this.currentType]
         if (!endpoint || !payload) throw new Error('Categoria de CSV não suportada.')
@@ -239,6 +262,10 @@ export default {
         this.keys = []
         this.currentPage = 1
         this.currentType = ''
+        this.$router.push({
+          name: proxRota,
+          params: propsts
+        })
       } catch (err) {
         console.error(err)
         alert('Erro ao enviar dados: ' + err.message)

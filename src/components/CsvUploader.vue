@@ -241,6 +241,15 @@ export default {
 
             })
             break
+          case 'usuario':
+            dataComIDs = this.data.map(item => {
+              const newItem = { ...item }
+              return {
+                ...newItem,
+                processoID: this.processoID
+              }
+            })
+            break
         }
 
 
@@ -263,7 +272,7 @@ export default {
 
         const proxEtapa = {
           usuario: 'vinculos',
-          vinculo_professor_turma: 'vinculo_professor_turma',
+          vinculos: '',
           disciplina: 'turmas',
           turma: 'usuarios'
         }
@@ -279,6 +288,9 @@ export default {
           disciplina: {
             processoId: this.processoID,
             disciplinaCodigo: data[0]._id,
+          },
+          turma: {
+            processoId: this.processoID,
           },
         }
         const propsts = proxProps[this.currentType]

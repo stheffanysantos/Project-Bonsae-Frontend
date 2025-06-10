@@ -31,7 +31,6 @@
         </ul>
         <Form />
       </div>
-      <button class="botaoNext" @click="goDiciplinas">Proximo</button>
     </div>
   </div>
 </template>

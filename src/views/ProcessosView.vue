@@ -1,14 +1,28 @@
 <template>
   <div class="containerUploader">
     <h1>Controle de importacao</h1>
-    <button class="botaoNewProcessos" @click="goPeriodo">+ Novo Processo</button>
+    <!-- Botão que abre a modal -->
+    <button class="botaoNewProcessos" @click="mostrarModal = true">+ Novo Processo</button>
+
+    <!-- Modal de nova identificação -->
+    <div v-if="mostrarModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Novo Processo</h3>
+        <input v-model="novaIdentificacao" placeholder="Digite a identificação (ex: processo-24)"
+          class="inputIdentificacao" />
+        <div class="modal-actions">
+          <button @click="criarProcesso" class="botaoNewProcessos">Criar</button>
+          <button @click="mostrarModal = false" class="btnProcessos neutral">Cancelar</button>
+        </div>
+      </div>
+    </div>
     <div class="content">
       <h2>Processos de Importação</h2>
       <div>
         <table>
           <thead>
             <tr>
-              <th>ID do Processo</th>
+              <th>Nome do Processo</th>
               <th>Período Letivo</th>
               <th>Data de Início</th>
               <th>Data de Término</th>
@@ -17,19 +31,24 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="processo in processosPaginados" :key="processo.id">
-              <td>{{ processo.id }}</td>
-              <td>{{ processo.periodo }}</td>
-              <td>{{ processo.inicio }}</td>
-              <td>{{ processo.fim }}</td>
+            <tr v-for="processo in processosPaginados" :key="processo._id">
+              <td>{{ processo.identificacao }}</td>
+              <td>{{ formatarPeriodo(processo.periodo) }}</td>
+              <td>{{ formatarData(processo.dataInicio) }}</td>
+              <td>{{ formatarData(processo.dataFim) }}</td> <!-- Data de término ainda não fornecida pela API -->
               <td>
-                <span v-if="processo.status === 'Concluído'" class="statusProcesso success">Concluído</span>
-                <span v-else class="statusProcesso info">Em Andamento</span>
+                <span :class="['statusProcesso', processo.status === 'CONCLUIDO' ? 'success' : 'info']">
+                  {{ formatarStatus(processo.status) }}
+                </span>
               </td>
               <td>
-                <button v-if="processo.status === 'Em Andamento'" class="btnProcessos danger">Cancelar</button>
-                <button v-if="processo.status === 'Em Andamento'" class="btnProcessos primary">Continuar</button>
-                <button v-if="processo.status === 'Concluído'" class="btnProcessos neutral">Visualizar</button>
+                <button v-if="processo.status === 'EM_ANDAMENTO'" class="btnProcessos danger"
+                  @click="cancelarProcesso(processo._id)">
+                  Cancelar
+                </button>
+                <button v-if="processo.status === 'EM_ANDAMENTO'" class="btnProcessos primary">Continuar</button>
+                <button v-if="processo.status === 'CONCLUIDO'" class="btnProcessos neutral">Visualizar</button>
+                <button v-if="processo.status === 'ABORTADO'" class="btnProcessos danger">Cancelado</button>
               </td>
             </tr>
           </tbody>
@@ -47,19 +66,17 @@
 </template>
 
 <script>
+import api from '@/services/api'
+
 export default {
   name: "TabelaImportacoes",
   data() {
     return {
       paginaAtual: 1,
       itensPorPagina: 10,
-      processos: Array.from({ length: 30 }, (_, i) => ({
-        id: i + 1,
-        periodo: `202${Math.floor(i / 10)}.1`,
-        inicio: '2025-01-01',
-        fim: '2025-06-30',
-        status: i % 2 === 0 ? 'Concluído' : 'Em Andamento',
-      })),
+      processos: [],
+      novaIdentificacao: '',
+      mostrarModal: false,
     };
   },
   computed: {
@@ -70,13 +87,71 @@ export default {
       const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
       const fim = inicio + this.itensPorPagina;
       return this.processos.slice(inicio, fim);
-    },
+    }
   },
   methods: {
-    goPeriodo() {
-      this.$router.push('/periodo');
+    async cancelarProcesso(processoId) {
+      const confirmacao = confirm('Tem certeza que deseja cancelar este processo?');
+      if (!confirmacao) return;
+
+      try {
+        await api.post(`/processos/${processoId}/abortar`);
+        await this.fetchProcessos();
+      } catch (error) {
+        console.error('Erro ao cancelar processo:', error);
+        alert('Não foi possível cancelar o processo.');
+      }
+    },
+    async criarProcesso() {
+      if (!this.novaIdentificacao.trim()) {
+        alert('Digite uma identificação.');
+        return;
+      }
+
+      try {
+        const res = await api.post('/processos', {
+          identificacao: this.novaIdentificacao.trim()
+        });
+        const processoId = res.data._id;
+
+        // Reset e fecha modal
+        this.novaIdentificacao = '';
+        this.mostrarModal = false;
+        await this.fetchProcessos();
+        this.$router.push({ name: 'periodo', params: { processoId } });
+
+      } catch (error) {
+        console.error('Erro ao criar processo:', error);
+        alert('Erro ao iniciar novo processo.');
+      }
+    },
+    async fetchProcessos() {
+      try {
+        const res = await api.get('/processos');
+        this.processos = res.data;
+      } catch (error) {
+        console.error('Erro ao buscar processos:', error);
+        alert('Erro ao carregar processos.');
+      }
+    },
+    formatarData(dataISO) {
+      if (!dataISO) return '--';
+      return new Date(dataISO).toLocaleDateString('pt-BR');
+    },
+    formatarStatus(status) {
+      if (!status) return 'Desconhecido';
+      status = status.toUpperCase();
+      if (status === 'ABORTADO') return 'Cancelado';
+      return status === 'CONCLUIDO' ? 'Concluído' : 'Em Andamento';
+    },
+    formatarPeriodo(periodo) {
+      if (!periodo) return '--';
+      return periodo.toUpperCase().replace('-', ' ');
     }
-  }
+  },
+  mounted() {
+    this.fetchProcessos();
+  },
 };
 </script>
 
@@ -109,5 +184,40 @@ tbody tr {
   display: flex;
   justify-content: center;
   gap: 10px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.inputIdentificacao {
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
 }
 </style>

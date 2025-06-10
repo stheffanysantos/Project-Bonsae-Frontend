@@ -29,9 +29,8 @@
             <h3>Vinculos</h3>
           </li>
         </ul>
-        <CsvUploader />
+        <CsvUploader :processoID="processoID" categoria="usuario" />
       </div>
-      <button class="botaoNext" @click="goVinculos">Proximo</button>
     </div>
   </div>
 </template>
@@ -42,6 +41,11 @@ export default {
   name: 'App',
   components: {
     CsvUploader,
+  },
+  data() {
+    return {
+      processoID: this.$route.params.processoId,
+    };
   },
   methods: {
     goVinculos() {

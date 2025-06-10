@@ -1,13 +1,12 @@
 <template>
   <div>
     <div class="containerCsv" style="flex-direction: column;">
-      <!-- Área de arrastar e soltar -->
+      <!-- Drop area -->
       <div class="drop-area" @dragover.prevent @dragenter.prevent @drop.prevent="handleDrop">
         <p>Arraste seu arquivo CSV ou Excel aqui ou clique abaixo para selecionar</p>
         <input type="file" @change="handleFileUpload" accept=".csv,.CSV,.xlsx,.XLSX,.xls,.XLS" />
       </div>
 
-      <!-- Exibição de erros gerais com scroll -->
       <div v-if="errors.length" class="errors">
         <ul>
           <li v-for="(err, i) in errors" :key="i">
@@ -16,19 +15,19 @@
         </ul>
       </div>
 
-      <!-- Tabela com dados paginados -->
+      <!-- Table -->
       <div class="tabela" v-if="paginatedData.length">
         <table>
           <thead>
             <tr>
-              <th v-for="(header, index) in headers" :key="index">
+              <th v-for="(header, index) in headers" :key="index" :title="`Campo normalizado: ${keys[index]}`">
                 {{ header }}
               </th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(row, rowIndex) in paginatedData" :key="rowIndex">
-              <td v-for="(key, index) in keys" :key="index" :class="{ 'invalid-cell': getCellError(rowIndex, key) }"
+              <td v-for="(key, index) in keys" :key="index" class="{ 'invalid-cell': getCellError(rowIndex, key) }"
                 :title="getCellError(rowIndex, key)">
                 <template v-if="getCellError(rowIndex, key)">
                   <input type="text" v-model="row[key]" @blur="onCellBlur" @keyup.enter="onCellBlur"
@@ -43,13 +42,11 @@
         </table>
       </div>
 
-      <!-- Paginação -->
+      <!-- Pagination -->
       <div class="pagination" v-if="totalPages > 1">
         <button @click="prevPage" :disabled="currentPage === 1">Anterior</button>
         <span>Página {{ currentPage }} de {{ totalPages }}</span>
         <button @click="nextPage" :disabled="currentPage === totalPages">Próxima</button>
-
-        <!-- Botões numéricos -->
         <div class="page-numbers">
           <button v-for="page in totalPages" :key="page" @click="goToPage(page)"
             :class="{ active: currentPage === page }">
@@ -58,18 +55,18 @@
         </div>
       </div>
 
-      <!-- Botão Enviar -->
+      <!-- Send Button -->
       <div class="send-button" style="margin-top: 1rem; text-align: right;">
-        <button @click="sendData" :disabled="errors.length > 0 || !data.length" class="btn btn-primary">
-          Enviar
+        <button @click="sendData" :disabled="errors.length > 0 || !data.length || loading" class="btn btn-primary">
+          <span v-if="loading">Enviando...</span>
+          <span v-else>Enviar</span>
         </button>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue'
+<script>
 import api from '@/services/api'
 import * as XLSX from 'xlsx'
 import { validatePeriodoCsv } from '@/utils/validators/periodoCsvValidator'
@@ -79,205 +76,341 @@ import { validateUsuarioCsv } from '@/utils/validators/usuariosCsvValidator'
 import { validateVinculoCsv } from '@/utils/validators/vinculosCsvValidator'
 import { validateVinculoCsvProf } from '@/utils/validators/vinculosCsvValidatorProf'
 
-// Dados e estado reativos
-const data = ref([])
-const headers = ref([])
-const keys = ref([])
-const errors = ref([])
-const currentPage = ref(1)
-const itemsPerPage = ref(10)
-const currentType = ref('') // tipo de planilha: usuario, disciplina, etc.
-
-// Validador atual (setado após upload)
-let currentValidator = validatePeriodoCsv
-
-// Computed para paginação
-const totalPages = computed(() => Math.ceil(data.value.length / itemsPerPage.value))
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  return data.value.slice(start, start + itemsPerPage.value)
-})
-
-// Funções de navegação de página
-function goToPage(page) {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
-}
-function prevPage() {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-function nextPage() {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
-}
-
-// Normaliza cabeçalhos para chaves
-function normalizeHeader(texto) {
-  if (typeof texto !== 'string') return ''
-  const textoSemAcento = texto.normalize('NFD').replace(/[̀-\u036f]/g, '')
-  const textoSemEspacos = textoSemAcento.replace(/[^a-zA-Z0-9]+/g, ' ')
-  const palavras = textoSemEspacos.trim().split(' ')
-  if (!palavras.length) return ''
-  let camelCase = palavras[0].toLowerCase()
-  for (let i = 1; i < palavras.length; i++) {
-    const p = palavras[i]
-    camelCase += p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()
-  }
-  return camelCase.replace(/ç/g, 'c')
-}
-
-function toIsoDate(brDate) {
-  if (!brDate || typeof brDate !== 'string') return brDate;
-  const [dia, mes, ano] = brDate.split('/');
-  if (!dia || !mes || !ano) return brDate;
-  return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-}
-
-// Parsing de CSV para array de objetos
-function parseCSV(text) {
-  const lines = text.trim().split('\n')
-  const raw = lines[0].split(/[,;]/).map(h => h.trim())
-  const normalized = raw.map(normalizeHeader)
-
-  headers.value = raw
-  keys.value = normalized
-  data.value = lines.slice(1).map(line => {
-    const values = line.split(/[,;]/).map(v => v.trim())
-    const row = {}
-    normalized.forEach((key, idx) => {
-      row[key] = values[idx] ?? ''
-      console.log(key);
-    })
-    return row
-  })
-  currentPage.value = 1
-}
-
-// Obtém mensagem de erro para célula
-function getCellError(rowIndex, key) {
-  const absoluteIndex = (currentPage.value - 1) * itemsPerPage.value + rowIndex
-  const err = errors.value.find(e => e.row - 1 === absoluteIndex && e.field === key)
-  return err ? err.message : ''
-}
-
-// Ao editar e sair do input, revalida todo o dataset
-function onCellBlur() {
-  const { valid, errors: errs } = currentValidator(data.value)
-  errors.value = valid ? [] : errs
-}
-
-
-// Função para enviar dados corr
-async function sendData() {
-  // Revalida antes de enviar
-  const { valid, errors: errs } = currentValidator(data.value)
-  if (!valid) {
-    errors.value = errs
-    return
-  }
-
-  // Bota datas para formato ISO
-  try {
-    data.value.forEach((item) => {
-      item.dataInicial = toIsoDate(item.dataInicial);
-      item.dataFinal = toIsoDate(item.dataFinal);
-    })
-  }
-  catch {
-    'N tem data pra formatar'
-  }
-
-  try {
-    console.log(data.value[0].valid)
-
-    const payload = {
-      type: currentType.value,
-      data: data.value
+export default {
+  name: 'CsvUploader',
+  props: {
+    categoria: String,
+    processoID: String,
+    periodoLetivoID: String,
+    disciplinaCodigo: String,
+  },
+  data() {
+    return {
+      data: [],
+      headers: [],
+      keys: [],
+      errors: [],
+      currentPage: 1,
+      itemsPerPage: 10,
+      currentType: '',
+      currentValidator: () => ({ valid: true, errors: [] }),
+      campoEsperado: [],
+      loading: false
     }
-    await api.post('/csv-upload', payload)
-    alert('Dados enviados com sucesso!')
-    // Opcional: resetar estado
-    data.value = []
-    headers.value = []
-    keys.value = []
-    currentPage.value = 1
-    currentType.value = ''
-  } catch (err) {
-    console.error(err)
-    alert('Erro ao enviar dados: ' + err.message)
-  }
-}
-
-// Lógica de leitura de arquivo (CSV/XLSX)
-function handleFile(file) {
-  const nome = file.name.toLowerCase()
-  const ext = nome.split('.').pop()
-  const reader = new FileReader()
-
-  reader.onload = (e) => {
-    let csvText = e.target.result
-
-    if (['xlsx', 'xls'].includes(ext)) {
-      const dataArray = new Uint8Array(csvText)
-      const workbook = XLSX.read(dataArray, { type: 'array' })
-      csvText = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]])
+  },
+  computed: {
+    totalPages() {
+      return Math.ceil(this.data.length / this.itemsPerPage)
+    },
+    paginatedData() {
+      const start = (this.currentPage - 1) * this.itemsPerPage
+      return this.data.slice(start, start + this.itemsPerPage)
     }
-
-    parseCSV(csvText)
-
-    // Define type e validador
-    if (nome.includes('usuario')) {
-      currentType.value = 'usuario'
-      currentValidator = validateUsuarioCsv
-    } else if (nome.includes('vinculo') && nome.includes('aluno')) {
-      currentType.value = 'vinculo_aluno_turma'
-      currentValidator = validateVinculoCsv
-    } else if (nome.includes('disciplina')) {
-      currentType.value = 'disciplina'
-      currentValidator = validateDisciplinaCsv
-    } else if (nome.includes('vinculo') && nome.includes('professor')) {
-      currentType.value = 'vinculo_professor_turma'
-      currentValidator = validateVinculoCsvProf
-    } else if (nome.includes('periodo')) {
-      currentType.value = 'periodo'
-      currentValidator = validatePeriodoCsv
-    } else {
-      currentType.value = 'turma'
-      currentValidator = validateTurmaCsv
+  },
+  watch: {
+    categoria: {
+      immediate: true,
+      handler() {
+        this.validarComCategoria()
+      }
     }
+  },
+  methods: {
+    goToPage(page) {
+      if (page >= 1 && page <= this.totalPages) this.currentPage = page
+    },
+    prevPage() {
+      if (this.currentPage > 1) this.currentPage--
+    },
+    nextPage() {
+      if (this.currentPage < this.totalPages) this.currentPage++
+    },
+    normalizeHeader(text) {
+      if (typeof text !== 'string') return ''
+      return text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, ' ')
+        .trim()
+        .split(' ')
+        .map((word, index) =>
+          index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join('')
+        .replace(/ç/g, 'c')
+    },
+    toIsoDate(dateBr) {
+      if (!dateBr || typeof dateBr !== 'string') return dateBr
+      const [d, m, y] = dateBr.split('/')
+      return y && m && d ? `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}` : dateBr
+    },
+    parseCSV(text) {
+      const lines = text.trim().split('\n')
+      const rawHeaders = lines[0].split(/[,;]/).map(h => h.trim())
+      const keys = rawHeaders.map(this.normalizeHeader)
 
-    const { valid, errors: errs } = currentValidator(data.value)
-    errors.value = valid ? [] : errs
-  }
+      this.headers = rawHeaders
+      this.keys = keys
+      this.data = lines.slice(1).map(line => {
+        const values = line.split(/[,;]/).map(v => v.trim())
+        const obj = {}
+        keys.forEach((key, idx) => {
+          obj[key] = values[idx] || ''
+        })
+        return obj
+      })
+      this.currentPage = 1
+      this.validarComCategoria()
+    },
+    getCellError(rowIndex, key) {
+      const absIndex = (this.currentPage - 1) * this.itemsPerPage + rowIndex
+      const err = this.errors.find(e => e.row - 1 === absIndex && e.field === key)
+      return err ? err.message : ''
+    },
+    onCellBlur() {
+      const { valid, errors } = this.currentValidator(this.data)
+      this.errors = valid ? [] : errors
+    },
+    async sendData() {
+      const { valid, errors } = this.currentValidator(this.data)
+      if (!valid) {
+        this.errors = errors
+        return
+      }
+      this.loading = true
 
-  if (ext === 'csv') {
-    reader.readAsText(file)
-  } else if (['xlsx', 'xls'].includes(ext)) {
-    reader.readAsArrayBuffer(file)
-  } else {
-    errors.value = [{ row: null, field: null, message: 'Formato de arquivo não suportado' }]
-  }
-}
+      try {
+        this.data.forEach(item => {
+          if ('dataInicial' in item) item.dataInicial = this.toIsoDate(item.dataInicial)
+          if ('dataFinal' in item) item.dataFinal = this.toIsoDate(item.dataFinal)
+        })
 
-function handleFileUpload(event) {
-  const file = event.target.files[0]
-  if (file && /\.(csv|xlsx|xls)$/i.test(file.name)) {
-    handleFile(file)
-  }
-}
+        let dataComIDs = [...this.data]
+        let dataTurma = []
+        let idprocesso
+        if (this.categoria === 'vinculo_professor_turma' || this.categoria === 'vinculo_aluno_turma') {
+          dataTurma = await api.get('/turmas')
+          idprocesso = dataTurma.data[0].processoID
+        }
 
-function handleDrop(event) {
-  const file = event.dataTransfer.files[0]
-  if (file && /\.(csv|xlsx|xls)$/i.test(file.name)) {
-    handleFile(file)
+
+        switch (this.categoria) {
+          case 'disciplina':
+            dataComIDs = this.data.map(item => {
+              const newItem = { ...item }
+              delete newItem.periodoLetivoIdentificacao
+              if ('disciplina' in newItem) {
+                newItem.nome = newItem.disciplina
+                delete newItem.disciplina
+              }
+              if ('codigoDaDisciplina' in newItem) {
+                newItem.codigo = newItem.codigoDaDisciplina
+                delete newItem.codigoDaDisciplina
+              }
+              if ('dataFinal' in newItem) {
+                newItem.dataFim = newItem.dataFinal
+                delete newItem.dataFinal
+              }
+              if ('estado' in newItem) {
+                delete newItem.estado
+              }
+              if ('categoria' in newItem) {
+                newItem.categoria = "CURSO"
+              }
+              return {
+                ...newItem,
+                processoID: this.processoID,
+                periodoLetivoID: this.periodoLetivoID
+              }
+            })
+            break
+          case 'turma':
+            console.log(this.disciplinaCodigo)
+            dataComIDs = this.data.map(item => {
+              const newItem = { ...item }
+              if ('codigodaturma' in newItem) {
+                newItem.codigo = parseInt(newItem.codigodaturma)
+                delete newItem.codigodaturma
+              }
+              if ('turno' in newItem) {
+                newItem.turno = newItem.turno.toUpperCase().replace('Ã', 'A')
+                console.log(newItem.turno)
+              }
+              if ('disciplinacodigo' in newItem) {
+                delete newItem.disciplinacodigo
+
+              }
+              return {
+                ...newItem,
+                disciplinaCodigo: this.disciplinaCodigo,
+                processoID: this.processoID,
+              }
+
+            })
+            break
+          case 'usuario':
+            dataComIDs = this.data.map(item => {
+              const newItem = { ...item }
+              return {
+                ...newItem,
+                processoID: this.processoID
+              }
+            })
+            break
+          case 'vinculo_professor_turma':
+            dataComIDs = this.data.map(item => {
+              const newItem = { ...item }
+              if ('disciplinacodigo' in newItem) {
+                newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo
+                delete newItem.disciplinacodigo
+              }
+              if ('codigodaturma' in newItem) {
+                newItem.turmaID = dataTurma.data[0]._id
+                delete newItem.codigodaturma
+              }
+              if ('professoresasresponsaveleismatriculaouemail' in newItem) {
+                newItem.email = newItem.professoresasresponsaveleismatriculaouemail
+                delete newItem.professoresasresponsaveleismatriculaouemail
+              }
+              return {
+                ...newItem,
+              }
+            })
+            break
+
+          case 'vinculo_aluno_turma': {
+            dataComIDs = this.data.map(item => {
+              const newItem = { ...item }
+              if ('disciplinacodigo' in newItem) {
+                newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo
+                delete newItem.disciplinacodigo
+              }
+              if ('codigodaturma' in newItem) {
+                newItem.turmaID = dataTurma.data[0]._id
+                delete newItem.codigodaturma
+              }
+              if ('matriculaiesouemaildoaluno' in newItem) {
+                newItem.email = newItem.matriculaiesouemaildoaluno
+                delete newItem.matriculaiesouemaildoaluno
+              }
+              return {
+                ...newItem,
+              }
+            })
+            break
+          }
+        }
+
+
+        const payloads = {
+          disciplina: { disciplinas: Array.from(dataComIDs) },
+          periodo: { periodos: Array.from(dataComIDs) },
+          turma: { turmas: Array.from(dataComIDs) },
+          usuario: { usuarios: Array.from(dataComIDs) },
+          vinculo_aluno_turma: { processoID: idprocesso, vinculos: Array.from(dataComIDs) },
+          vinculo_professor_turma: { processoID: idprocesso, vinculos: Array.from(dataComIDs) }
+        }
+        const endpoints = {
+          usuario: '/usuarios',
+          disciplina: '/disciplinas',
+          turma: '/turmas',
+          periodo: '/periodos',
+          vinculo_aluno_turma: '/vinculos',
+          vinculo_professor_turma: '/vinculos'
+        }
+
+        const proxEtapa = {
+          usuario: 'vinculos',
+          disciplina: 'turmas',
+          turma: 'usuarios'
+        }
+
+
+        const proxRota = proxEtapa[this.currentType]
+        const endpoint = endpoints[this.currentType]
+        const payload = payloads[this.currentType]
+        if (!endpoint || !payload) throw new Error('Categoria de CSV não suportada.')
+        console.log('Enviando dados para:', endpoint, payload)
+        const { data } = await api.post(endpoint, payload)
+        alert('Dados enviados com sucesso!')
+        const proxProps = {
+          disciplina: {
+            processoId: this.processoID,
+            disciplinaCodigo: data[0]._id,
+          },
+          turma: {
+            processoId: this.processoID,
+          },
+        }
+        const propsts = proxProps[this.currentType]
+        if (this.categoria === 'vinculo_aluno_turma' || this.categoria === 'vinculo_professor_turma') {
+          alert('Vínculos criados com sucesso!')
+        } else {
+          this.$router.push({
+            name: proxRota,
+            params: propsts
+          })
+        }
+      } catch (err) {
+        console.error(err)
+        alert('Erro ao enviar dados: ' + err.message)
+      } finally {
+        this.loading = false
+      }
+    },
+    handleFile(file) {
+      const ext = file.name.toLowerCase().split('.').pop()
+      const reader = new FileReader()
+      reader.onload = e => {
+        let content = e.target.result
+        if (['xlsx', 'xls'].includes(ext)) {
+          const workbook = XLSX.read(new Uint8Array(content), { type: 'array' })
+          content = XLSX.utils.sheet_to_csv(workbook.Sheets[workbook.SheetNames[0]])
+        }
+        this.parseCSV(content)
+      }
+      if (ext === 'csv') reader.readAsText(file)
+      else if (['xlsx', 'xls'].includes(ext)) reader.readAsArrayBuffer(file)
+    },
+    handleFileUpload(event) {
+      const file = event.target.files[0]
+      if (file && /\.(csv|xlsx|xls)$/i.test(file.name)) {
+        this.handleFile(file)
+      }
+    },
+    handleDrop(event) {
+      const file = event.dataTransfer.files[0]
+      if (file && /\.(csv|xlsx|xls)$/i.test(file.name)) {
+        this.handleFile(file)
+      }
+    },
+    validarComCategoria() {
+      const map = {
+        usuario: [validateUsuarioCsv, 'usuario', ['nome', 'email', 'cpf', 'tipo']],
+        vinculo_aluno_turma: [validateVinculoCsv, 'vinculo_aluno_turma', ['usuarioID', 'turmaID']],
+        vinculo_professor_turma: [validateVinculoCsvProf, 'vinculo_professor_turma', ['usuarioID', 'turmaID']],
+        disciplina: [validateDisciplinaCsv, 'disciplina', ['codigo', 'nome']],
+        periodo: [validatePeriodoCsv, 'periodo', ['identificacao', 'dataInicial', 'dataFinal']],
+        turma: [validateTurmaCsv, 'turma', ['codigo', 'disciplinaID', 'periodoLetivoID']]
+      }
+
+      const val = map[this.categoria]
+      if (val) {
+        this.currentValidator = val[0]
+        this.currentType = val[1]
+        this.campoEsperado = val[2]
+      } else {
+        this.currentValidator = () => ({ valid: true, errors: [] })
+        this.currentType = ''
+        this.campoEsperado = []
+      }
+
+      const { valid, errors } = this.currentValidator(this.data)
+      this.errors = valid ? [] : errors
+    }
   }
 }
 </script>
-
 <style scoped>
 .btn {
   padding: 0.5rem 1rem;

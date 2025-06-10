@@ -32,9 +32,9 @@
         <br>
         <br>
         <h3>Vinculos Professores</h3>
-        <CsvUploader />
+        <CsvUploader categoria="vinculo_professor_turma" />
         <h3>Vinculos Alunos</h3>
-        <CsvUploader />
+        <CsvUploader categoria="vinculo_aluno_turma" />
       </div>
       <button class="botaoNext">Finalizar</button>
     </div>

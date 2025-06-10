@@ -17,7 +17,7 @@ export function validateVinculoCsvProf(records) {
     const errors = [];
 
     function addError(row, field, message) {
-        errors.push({row, field, message})
+        errors.push({ row, field, message })
     }
 
     records.forEach((row, idx) => {
@@ -26,7 +26,7 @@ export function validateVinculoCsvProf(records) {
         FIELD_RULES.forEach(rule => {
             const val = row[rule.key];
 
-            if (!val || String(val).trim() === '') {
+            if (String(val).trim() === '') {
                 addError(rowNum, rule.key, rule.requiredMsg);
                 return;
             }

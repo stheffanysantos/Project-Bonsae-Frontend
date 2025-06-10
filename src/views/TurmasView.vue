@@ -29,7 +29,7 @@
             <h3>Vinculos</h3>
           </li>
         </ul>
-        <CsvUploader categoria="turma" />
+        <CsvUploader :processoID="processoID" :disciplinaCodigo="disciplinaCodigo" categoria="turma" />
       </div>
       <button class="botaoNext" @click="goUsuarios">Proximo</button>
     </div>
@@ -42,6 +42,12 @@ export default {
   name: 'App',
   components: {
     CsvUploader,
+  },
+  data() {
+    return {
+      processoID: this.$route.params.processoId,
+      disciplinaCodigo: this.$route.params.disciplinaCodigo,
+    };
   },
   methods: {
     goUsuarios() {

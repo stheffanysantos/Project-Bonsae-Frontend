@@ -55,7 +55,7 @@ export function validateTurmaCsv(records) {
     fieldRules.forEach(rule => {
       const val = row[rule.key];
       // obrigatório
-      if (!val || String(val).trim() === '') {
+      if (String(val).trim() === '') {
         addError(rowNum, rule.key, rule.requiredMsg);
         return;
       }

@@ -45,8 +45,8 @@ export default {
   },
   data() {
     return {
-      processoID: this.$route.params.processoId,     // Exemplo, seu ID real aqui
-      periodoLetivoID: this.$route.params.periodoId, // Exemplo, seu ID real aqui
+      processoID: this.$route.params.processoId,
+      periodoLetivoID: this.$route.params.periodoId,
     };
   },
   methods: {

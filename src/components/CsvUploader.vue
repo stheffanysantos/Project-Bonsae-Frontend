@@ -81,7 +81,8 @@ export default {
   props: {
     categoria: String,
     processoID: String,
-    periodoLetivoID: String
+    periodoLetivoID: String,
+    disciplinaCodigo: String,
   },
   data() {
     return {
@@ -215,6 +216,31 @@ export default {
                 periodoLetivoID: this.periodoLetivoID
               }
             })
+            break
+          case 'turma':
+            console.log(this.disciplinaCodigo)
+            dataComIDs = this.data.map(item => {
+              const newItem = { ...item }
+              if ('codigodaturma' in newItem) {
+                newItem.codigo = parseInt(newItem.codigodaturma)
+                delete newItem.codigodaturma
+              }
+              if ('turno' in newItem) {
+                newItem.turno = newItem.turno.toUpperCase().replace('Ã', 'A')
+                console.log(newItem.turno)
+              }
+              if ('disciplinacodigo' in newItem) {
+                delete newItem.disciplinacodigo
+
+              }
+              return {
+                ...newItem,
+                disciplinaCodigo: this.disciplinaCodigo,
+                processoID: this.processoID,
+              }
+
+            })
+            break
         }
 
 
@@ -242,26 +268,20 @@ export default {
           turma: 'usuarios'
         }
 
-        const proxProps = {
-          disciplina: {
-            processoId: this.processoID,
-            disciplinaCodigo: this._id
-          },
 
-        }
-
-        const propsts = proxProps[this.currentType]
         const proxRota = proxEtapa[this.currentType]
         const endpoint = endpoints[this.currentType]
         const payload = payloads[this.currentType]
         if (!endpoint || !payload) throw new Error('Categoria de CSV não suportada.')
-        await api.post(endpoint, payload)
+        const { data } = await api.post(endpoint, payload)
         alert('Dados enviados com sucesso!')
-        this.data = []
-        this.headers = []
-        this.keys = []
-        this.currentPage = 1
-        this.currentType = ''
+        const proxProps = {
+          disciplina: {
+            processoId: this.processoID,
+            disciplinaCodigo: data[0]._id,
+          },
+        }
+        const propsts = proxProps[this.currentType]
         this.$router.push({
           name: proxRota,
           params: propsts

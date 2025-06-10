@@ -186,6 +186,13 @@ export default {
         })
 
         let dataComIDs = [...this.data]
+        let dataTurma = []
+        let idprocesso
+        if (this.categoria === 'vinculo_professor_turma') {
+          dataTurma = await api.get('/turmas')
+          idprocesso = dataTurma.data[0].processoID
+        }
+
 
         switch (this.categoria) {
           case 'disciplina':
@@ -250,6 +257,27 @@ export default {
               }
             })
             break
+          case 'vinculo_professor_turma':
+
+            dataComIDs = this.data.map(item => {
+              const newItem = { ...item }
+              if ('disciplinacodigo' in newItem) {
+                newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo
+                delete newItem.disciplinacodigo
+              }
+              if ('codigodaturma' in newItem) {
+                newItem.turmaID = dataTurma.data[0]._id
+                delete newItem.codigodaturma
+              }
+              if ('professoresasresponsaveleismatriculaouemail' in newItem) {
+                newItem.email = newItem.professoresasresponsaveleismatriculaouemail
+                delete newItem.professoresasresponsaveleismatriculaouemail
+              }
+              return {
+                ...newItem,
+              }
+            })
+            break
         }
 
 
@@ -258,16 +286,16 @@ export default {
           periodo: { periodos: Array.from(dataComIDs) },
           turma: { turmas: Array.from(dataComIDs) },
           usuario: { usuarios: Array.from(dataComIDs) },
-          vinculo_aluno_turma: { vinculosAlunos: Array.from(dataComIDs) },
-          vinculo_professor_turma: { vinculosProfessores: Array.from(dataComIDs) }
+          vinculo_aluno_turma: { processoID: this.processoID, vinculos: Array.from(dataComIDs) },
+          vinculo_professor_turma: { processoID: idprocesso, vinculos: Array.from(dataComIDs) }
         }
         const endpoints = {
           usuario: '/usuarios',
           disciplina: '/disciplinas',
           turma: '/turmas',
           periodo: '/periodos',
-          vinculo_aluno_turma: '/vinculos/alunos',
-          vinculo_professor_turma: '/vinculos/professores'
+          vinculo_aluno_turma: '/vinculos',
+          vinculo_professor_turma: '/vinculos'
         }
 
         const proxEtapa = {
@@ -282,6 +310,7 @@ export default {
         const endpoint = endpoints[this.currentType]
         const payload = payloads[this.currentType]
         if (!endpoint || !payload) throw new Error('Categoria de CSV não suportada.')
+        console.log('Enviando dados para:', endpoint, payload)
         const { data } = await api.post(endpoint, payload)
         alert('Dados enviados com sucesso!')
         const proxProps = {

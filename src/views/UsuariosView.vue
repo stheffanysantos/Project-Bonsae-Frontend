@@ -31,7 +31,6 @@
         </ul>
         <CsvUploader :processoID="processoID" categoria="usuario" />
       </div>
-      <button class="botaoNext" @click="goVinculos">Proximo</button>
     </div>
   </div>
 </template>

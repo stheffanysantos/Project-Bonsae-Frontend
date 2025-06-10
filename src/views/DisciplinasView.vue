@@ -31,7 +31,7 @@
         </ul>
         <CsvUploader :processoID="processoID" :periodoLetivoID="periodoLetivoID" categoria="disciplina" />
       </div>
-      <button class="botaoNext" @click="goTurmas">Proximo</button>
+
     </div>
   </div>
 </template>

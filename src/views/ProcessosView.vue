@@ -22,7 +22,7 @@
         <table>
           <thead>
             <tr>
-              <th>ID do Processo</th>
+              <th>Nome do Processo</th>
               <th>Período Letivo</th>
               <th>Data de Início</th>
               <th>Data de Término</th>

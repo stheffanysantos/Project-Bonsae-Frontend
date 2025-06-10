@@ -31,7 +31,6 @@
         </ul>
         <CsvUploader :processoID="processoID" :disciplinaCodigo="disciplinaCodigo" categoria="turma" />
       </div>
-      <button class="botaoNext" @click="goUsuarios">Proximo</button>
     </div>
   </div>
 </template>

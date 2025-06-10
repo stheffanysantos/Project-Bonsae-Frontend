@@ -188,7 +188,7 @@ export default {
         let dataComIDs = [...this.data]
         let dataTurma = []
         let idprocesso
-        if (this.categoria === 'vinculo_professor_turma') {
+        if (this.categoria === 'vinculo_professor_turma' || this.categoria === 'vinculo_aluno_turma') {
           dataTurma = await api.get('/turmas')
           idprocesso = dataTurma.data[0].processoID
         }
@@ -258,7 +258,6 @@ export default {
             })
             break
           case 'vinculo_professor_turma':
-
             dataComIDs = this.data.map(item => {
               const newItem = { ...item }
               if ('disciplinacodigo' in newItem) {
@@ -278,6 +277,28 @@ export default {
               }
             })
             break
+
+          case 'vinculo_aluno_turma': {
+            dataComIDs = this.data.map(item => {
+              const newItem = { ...item }
+              if ('disciplinacodigo' in newItem) {
+                newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo
+                delete newItem.disciplinacodigo
+              }
+              if ('codigodaturma' in newItem) {
+                newItem.turmaID = dataTurma.data[0]._id
+                delete newItem.codigodaturma
+              }
+              if ('matriculaiesouemaildoaluno' in newItem) {
+                newItem.email = newItem.matriculaiesouemaildoaluno
+                delete newItem.matriculaiesouemaildoaluno
+              }
+              return {
+                ...newItem,
+              }
+            })
+            break
+          }
         }
 
 
@@ -286,7 +307,7 @@ export default {
           periodo: { periodos: Array.from(dataComIDs) },
           turma: { turmas: Array.from(dataComIDs) },
           usuario: { usuarios: Array.from(dataComIDs) },
-          vinculo_aluno_turma: { processoID: this.processoID, vinculos: Array.from(dataComIDs) },
+          vinculo_aluno_turma: { processoID: idprocesso, vinculos: Array.from(dataComIDs) },
           vinculo_professor_turma: { processoID: idprocesso, vinculos: Array.from(dataComIDs) }
         }
         const endpoints = {
@@ -300,7 +321,6 @@ export default {
 
         const proxEtapa = {
           usuario: 'vinculos',
-          vinculos: '',
           disciplina: 'turmas',
           turma: 'usuarios'
         }
@@ -323,10 +343,14 @@ export default {
           },
         }
         const propsts = proxProps[this.currentType]
-        this.$router.push({
-          name: proxRota,
-          params: propsts
-        })
+        if (this.categoria === 'vinculo_aluno_turma' || this.categoria === 'vinculo_professor_turma') {
+          alert('Vínculos criados com sucesso!')
+        } else {
+          this.$router.push({
+            name: proxRota,
+            params: propsts
+          })
+        }
       } catch (err) {
         console.error(err)
         alert('Erro ao enviar dados: ' + err.message)

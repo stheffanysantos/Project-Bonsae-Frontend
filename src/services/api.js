@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://dae2-2804-14c-4384-8657-00-1045.ngrok-free.app',
+    baseURL: 'https://bonsaeb-production-d6a0.up.railway.app/',
     timeout: 5000,
 })
 

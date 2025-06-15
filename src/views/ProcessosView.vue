@@ -1,6 +1,5 @@
 <template>
   <div class="containerUploader">
-    <h1>Controle de importacao</h1>
     <!-- Botão que abre a modal -->
     <button class="botaoNewProcessos" @click="mostrarModal = true">+ Novo Processo</button>
 
@@ -73,7 +72,7 @@ export default {
   data() {
     return {
       paginaAtual: 1,
-      itensPorPagina: 10,
+      itensPorPagina: 6,
       processos: [],
       novaIdentificacao: '',
       mostrarModal: false,

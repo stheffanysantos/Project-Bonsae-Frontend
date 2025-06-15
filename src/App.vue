@@ -1,23 +1,19 @@
 <template>
-  <FundoAnimado id="app">
+  <div id="app">
+    <HeaderTopo />
     <router-view />
-  </FundoAnimado>
+    <FooterPage/>
+  </div>
 </template>
 
 <script>
-import FundoAnimado from './components/fundoAnimado.vue';
+import HeaderTopo from './components/HeaderTopo.vue'
+import FooterPage from './components/FotterPage.vue'
+
 export default {
   components: {
-    FundoAnimado,
-  },
-  name: 'App'
+    HeaderTopo,
+    FooterPage
+  }
 }
 </script>
-
-<style>
-nav {
-  margin-bottom: 20px;
-}
-
-@import './assets/css/style.css';
-</style>

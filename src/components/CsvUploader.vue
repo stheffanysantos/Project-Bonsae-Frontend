@@ -27,7 +27,7 @@
           </thead>
           <tbody>
             <tr v-for="(row, rowIndex) in paginatedData" :key="rowIndex">
-              <td v-for="(key, index) in keys" :key="index" class="{ 'invalid-cell': getCellError(rowIndex, key) }"
+              <td v-for="(key, index) in keys" :key="index" :class="{ 'invalid-cell': getCellError(rowIndex, key) }"
                 :title="getCellError(rowIndex, key)">
                 <template v-if="getCellError(rowIndex, key)">
                   <input type="text" v-model="row[key]" @blur="onCellBlur" @keyup.enter="onCellBlur"

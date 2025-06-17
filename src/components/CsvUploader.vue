@@ -171,206 +171,191 @@ export default {
       const { valid, errors } = this.currentValidator(this.data)
       this.errors = valid ? [] : errors
     },
-    async sendData() {
-      const { valid, errors } = this.currentValidator(this.data);
-      if (!valid) {
-        this.errors = errors;
-        return;
-      }
+async sendData() {
+  const { valid, errors } = this.currentValidator(this.data);
+  if (!valid) {
+    this.errors = errors;
+    return;
+  }
 
-      this.loading = true;
+  this.loading = true;
 
-      try {
-        this.data.forEach(item => {
-          if ('dataInicial' in item) item.dataInicial = this.toIsoDate(item.dataInicial);
-          if ('dataFinal' in item) item.dataFinal = this.toIsoDate(item.dataFinal);
-        });
+  try {
+    this.data.forEach(item => {
+      if ('dataInicial' in item) item.dataInicial = this.toIsoDate(item.dataInicial);
+      if ('dataFinal' in item) item.dataFinal = this.toIsoDate(item.dataFinal);
+    });
 
-        let dataComIDs = [...this.data];
-        let dataTurma = [];
-        let idprocesso;
+    let dataComIDs = [...this.data];
+    let dataTurma = [];
+    let idprocesso;
 
-        if (this.categoria === 'vinculo_professor_turma' || this.categoria === 'vinculo_aluno_turma') {
-          dataTurma = await api.get('/turmas');
-          idprocesso = dataTurma.data[0].processoID;
-        }
+    if (this.categoria === 'vinculo_professor_turma' || this.categoria === 'vinculo_aluno_turma') {
+      dataTurma = await api.get('/turmas');
+      idprocesso = dataTurma.data[0].processoID;
+    }
 
-        // Transforma dados conforme categoria
-        switch (this.categoria) {
-          case 'disciplina':
-            dataComIDs = this.data.map(item => {
-              const newItem = { ...item };
-              delete newItem.periodoLetivoIdentificacao;
-              if ('disciplina' in newItem) {
-                newItem.nome = newItem.disciplina;
-                delete newItem.disciplina;
-              }
-              if ('codigoDaDisciplina' in newItem) {
-                newItem.codigo = newItem.codigoDaDisciplina;
-                delete newItem.codigoDaDisciplina;
-              }
-              if ('dataFinal' in newItem) {
-                newItem.dataFim = newItem.dataFinal;
-                delete newItem.dataFinal;
-              }
-              if ('estado' in newItem) delete newItem.estado;
-              if ('categoria' in newItem) newItem.categoria = "CURSO";
-              return {
-                ...newItem,
-                processoID: this.processoID,
-                periodoLetivoID: this.periodoLetivoID
-              };
-            });
-            break;
-
-          case 'turma':
-            dataComIDs = this.data.map(item => {
-              const newItem = { ...item };
-              if ('codigodaturma' in newItem) {
-                newItem.codigo = parseInt(newItem.codigodaturma);
-                delete newItem.codigodaturma;
-              }
-              if ('turno' in newItem) {
-                newItem.turno = newItem.turno.toUpperCase().replace('Ã', 'A');
-              }
-              if ('disciplinacodigo' in newItem) {
-                delete newItem.disciplinacodigo;
-              }
-              return {
-                ...newItem,
-                disciplinaCodigo: this.disciplinaCodigo,
-                processoID: this.processoID,
-              };
-            });
-            break;
-
-          case 'usuario':
-            dataComIDs = this.data.map(item => {
-              const newItem = { ...item };
-              return {
-                ...newItem,
-                processoID: this.processoID
-              };
-            });
-            break;
-
-          case 'vinculo_professor_turma':
-            dataComIDs = this.data.map(item => {
-              const newItem = { ...item };
-              if ('disciplinacodigo' in newItem) {
-                newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo;
-                delete newItem.disciplinacodigo;
-              }
-              if ('codigodaturma' in newItem) {
-                newItem.turmaID = dataTurma.data[0]._id;
-                delete newItem.codigodaturma;
-              }
-              if ('professoresasresponsaveleismatriculaouemail' in newItem) {
-                newItem.email = newItem.professoresasresponsaveleismatriculaouemail;
-                delete newItem.professoresasresponsaveleismatriculaouemail;
-              }
-              return { ...newItem };
-            });
-            break;
-
-          case 'vinculo_aluno_turma':
-            dataComIDs = this.data.map(item => {
-              const newItem = { ...item };
-              if ('disciplinacodigo' in newItem) {
-                newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo;
-                delete newItem.disciplinacodigo;
-              }
-              if ('codigodaturma' in newItem) {
-                newItem.turmaID = dataTurma.data[0]._id;
-                delete newItem.codigodaturma;
-              }
-              if ('matriculaiesouemaildoaluno' in newItem) {
-                newItem.email = newItem.matriculaiesouemaildoaluno;
-                delete newItem.matriculaiesouemaildoaluno;
-              }
-              return { ...newItem };
-            });
-            break;
-        }
-
-        const payloads = {
-          disciplina: { disciplinas: dataComIDs },
-          periodo: { periodos: dataComIDs },
-          turma: { turmas: dataComIDs },
-          usuario: { usuarios: dataComIDs },
-          vinculo_aluno_turma: { processoID: idprocesso, vinculos: dataComIDs },
-          vinculo_professor_turma: { processoID: idprocesso, vinculos: dataComIDs }
-        };
-        const endpoints = {
-          usuario: '/usuarios',
-          disciplina: '/disciplinas',
-          turma: '/turmas',
-          periodo: '/periodos',
-          vinculo_aluno_turma: '/vinculos',
-          vinculo_professor_turma: '/vinculos'
-        };
-        const proxEtapa = {
-          usuario: 'vinculos',
-          disciplina: 'turmas',
-          turma: 'usuarios'
-        };
-
-        const endpoint = endpoints[this.currentType];
-        const payload = payloads[this.currentType];
-        const proxRota = proxEtapa[this.currentType];
-
-        if (!endpoint || !payload) throw new Error('Categoria de CSV não suportada.');
-console.log("Payload enviado para API:", JSON.stringify(payload, null, 2));
-
-        const { data } = await api.post(endpoint, payload);
-
-        alert('Dados enviados com sucesso!');
-
-        const proxProps = {
-          disciplina: {
-            processoId: this.processoID,
-            disciplinaCodigo: data[0]._id,
-          },
-          turma: {
-            processoId: this.processoID,
-          },
-        };
-
-        if (this.categoria === 'vinculo_aluno_turma' || this.categoria === 'vinculo_professor_turma') {
-          alert('Vínculos criados com sucesso!');
-        } else {
-          this.$router.push({
-            name: proxRota,
-            params: proxProps[this.currentType]
-          });
-        }
-      } catch (err) {
-        console.error('Erro completo:', err);
-        if (err.response && err.response.status === 400) {
-          const msg = err.response.data?.message || '';
-
-          const match = msg.match(/c[oó]digos? j[aá] existem:?\s*(.*)/i);
-          if (match && match[1]) {
-            const codigosDuplicados = match[1].split(',').map(c => c.trim());
-            this.data = this.data.filter(d => !codigosDuplicados.includes(d.codigo));
-            codigosDuplicados.forEach(codigo => {
-              this.errors.push({
-                row: '-',
-                field: 'codigo',
-                message: `Código ${codigo} já existe e foi removido.`
-              });
-            });
-            alert(`Alguns códigos já existiam e foram removidos:\n${codigosDuplicados.join(', ')}`);
-          } else {
-            alert(`Erro ao enviar dados:\n${msg}`);
+    // Transforma dados conforme categoria
+    switch (this.categoria) {
+      case 'disciplina':
+        dataComIDs = this.data.map(item => {
+          const newItem = { ...item };
+          delete newItem.periodoLetivoIdentificacao;
+          if ('disciplina' in newItem) {
+            newItem.nome = newItem.disciplina;
+            delete newItem.disciplina;
           }
-        } else {
-          alert('Erro desconhecido ao enviar dados: ' + err.message);
-        }
-      } finally {
-        this.loading = false;
-      }
-    },
+          if ('codigoDaDisciplina' in newItem) {
+            newItem.codigo = newItem.codigoDaDisciplina;
+            delete newItem.codigoDaDisciplina;
+          }
+          if ('dataFinal' in newItem) {
+            newItem.dataFim = newItem.dataFinal;
+            delete newItem.dataFinal;
+          }
+          if ('estado' in newItem) delete newItem.estado;
+          if ('categoria' in newItem) newItem.categoria = "CURSO";
+          return {
+            ...newItem,
+            processoID: this.processoID,
+            periodoLetivoID: this.periodoLetivoID
+          };
+        });
+        break;
+
+      case 'turma':
+        dataComIDs = this.data.map(item => {
+          const newItem = { ...item };
+          if ('codigodaturma' in newItem) {
+            newItem.codigo = parseInt(newItem.codigodaturma);
+            delete newItem.codigodaturma;
+          }
+          if ('turno' in newItem) {
+            newItem.turno = newItem.turno.toUpperCase().replace('Ã', 'A');
+          }
+          if ('disciplinacodigo' in newItem) {
+            delete newItem.disciplinacodigo;
+          }
+          return {
+            ...newItem,
+            disciplinaCodigo: this.disciplinaCodigo,
+            processoID: this.processoID,
+          };
+        });
+        break;
+
+      case 'usuario':
+        dataComIDs = this.data.map(item => {
+          const newItem = { ...item };
+          return {
+            ...newItem,
+            processoID: this.processoID
+          };
+        });
+        break;
+
+      case 'vinculo_professor_turma':
+        dataComIDs = this.data.map(item => {
+          const newItem = { ...item };
+          if ('disciplinacodigo' in newItem) {
+            newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo;
+            delete newItem.disciplinacodigo;
+          }
+          if ('codigodaturma' in newItem) {
+            newItem.turmaID = dataTurma.data[0]._id;
+            delete newItem.codigodaturma;
+          }
+          if ('professoresasresponsaveleismatriculaouemail' in newItem) {
+            newItem.email = newItem.professoresasresponsaveleismatriculaouemail;
+            delete newItem.professoresasresponsaveleismatriculaouemail;
+          }
+          return { ...newItem };
+        });
+        break;
+
+      case 'vinculo_aluno_turma':
+        dataComIDs = this.data.map(item => {
+          const newItem = { ...item };
+          if ('disciplinacodigo' in newItem) {
+            newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo;
+            delete newItem.disciplinacodigo;
+          }
+          if ('codigodaturma' in newItem) {
+            newItem.turmaID = dataTurma.data[0]._id;
+            delete newItem.codigodaturma;
+          }
+          if ('matriculaiesouemaildoaluno' in newItem) {
+            newItem.email = newItem.matriculaiesouemaildoaluno;
+            delete newItem.matriculaiesouemaildoaluno;
+          }
+          return { ...newItem };
+        });
+        break;
+    }
+
+    const payloads = {
+      disciplina: { disciplinas: dataComIDs },
+      periodo: { periodos: dataComIDs },
+      turma: { turmas: dataComIDs },
+      usuario: { usuarios: dataComIDs },
+      vinculo_aluno_turma: { processoID: idprocesso, vinculos: dataComIDs },
+      vinculo_professor_turma: { processoID: idprocesso, vinculos: dataComIDs }
+    };
+    const endpoints = {
+      usuario: '/usuarios',
+      disciplina: '/disciplinas',
+      turma: '/turmas',
+      periodo: '/periodos',
+      vinculo_aluno_turma: '/vinculos',
+      vinculo_professor_turma: '/vinculos'
+    };
+    const proxEtapa = {
+      usuario: 'vinculos',
+      disciplina: 'turmas',
+      turma: 'usuarios'
+    };
+
+    const endpoint = endpoints[this.currentType];
+    const payload = payloads[this.currentType];
+    const proxRota = proxEtapa[this.currentType];
+
+    if (!endpoint || !payload) throw new Error('Categoria de CSV não suportada.');
+    console.log("Payload enviado para API:", JSON.stringify(payload, null, 2));
+
+    const { data } = await api.post(endpoint, payload);
+
+    alert('Dados enviados com sucesso!');
+
+    const proxProps = {
+      disciplina: {
+        processoId: this.processoID,
+        disciplinaCodigo: data[0]._id,
+      },
+      turma: {
+        processoId: this.processoID,
+      },
+    };
+
+    if (this.categoria === 'vinculo_aluno_turma' || this.categoria === 'vinculo_professor_turma') {
+      alert('Vínculos criados com sucesso!');
+    } else {
+      this.$router.push({
+        name: proxRota,
+        params: proxProps[this.currentType]
+      });
+    }
+  } catch (err) {
+    console.error('Erro completo:', err);
+    if (err.response && err.response.status === 400) {
+      const msg = err.response.data?.message || '';
+      alert(`Erro ao enviar dados:\n${msg}`);
+    } else {
+      alert('Erro desconhecido ao enviar dados: ' + err.message);
+    }
+  } finally {
+    this.loading = false;
+  }
+},
 
     handleFile(file) {
       const ext = file.name.toLowerCase().split('.').pop()

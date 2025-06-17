@@ -172,144 +172,135 @@ export default {
       this.errors = valid ? [] : errors
     },
     async sendData() {
-      const { valid, errors } = this.currentValidator(this.data)
+      const { valid, errors } = this.currentValidator(this.data);
       if (!valid) {
-        this.errors = errors
-        return
+        this.errors = errors;
+        return;
       }
-      this.loading = true
+
+      this.loading = true;
 
       try {
         this.data.forEach(item => {
-          if ('dataInicial' in item) item.dataInicial = this.toIsoDate(item.dataInicial)
-          if ('dataFinal' in item) item.dataFinal = this.toIsoDate(item.dataFinal)
-        })
+          if ('dataInicial' in item) item.dataInicial = this.toIsoDate(item.dataInicial);
+          if ('dataFinal' in item) item.dataFinal = this.toIsoDate(item.dataFinal);
+        });
 
-        let dataComIDs = [...this.data]
-        let dataTurma = []
-        let idprocesso
+        let dataComIDs = [...this.data];
+        let dataTurma = [];
+        let idprocesso;
+
         if (this.categoria === 'vinculo_professor_turma' || this.categoria === 'vinculo_aluno_turma') {
-          dataTurma = await api.get('/turmas')
-          idprocesso = dataTurma.data[0].processoID
+          dataTurma = await api.get('/turmas');
+          idprocesso = dataTurma.data[0].processoID;
         }
 
-
+        // Transforma dados conforme categoria
         switch (this.categoria) {
           case 'disciplina':
             dataComIDs = this.data.map(item => {
-              const newItem = { ...item }
-              delete newItem.periodoLetivoIdentificacao
+              const newItem = { ...item };
+              delete newItem.periodoLetivoIdentificacao;
               if ('disciplina' in newItem) {
-                newItem.nome = newItem.disciplina
-                delete newItem.disciplina
+                newItem.nome = newItem.disciplina;
+                delete newItem.disciplina;
               }
               if ('codigoDaDisciplina' in newItem) {
-                newItem.codigo = newItem.codigoDaDisciplina
-                delete newItem.codigoDaDisciplina
+                newItem.codigo = newItem.codigoDaDisciplina;
+                delete newItem.codigoDaDisciplina;
               }
               if ('dataFinal' in newItem) {
-                newItem.dataFim = newItem.dataFinal
-                delete newItem.dataFinal
+                newItem.dataFim = newItem.dataFinal;
+                delete newItem.dataFinal;
               }
-              if ('estado' in newItem) {
-                delete newItem.estado
-              }
-              if ('categoria' in newItem) {
-                newItem.categoria = "CURSO"
-              }
+              if ('estado' in newItem) delete newItem.estado;
+              if ('categoria' in newItem) newItem.categoria = "CURSO";
               return {
                 ...newItem,
                 processoID: this.processoID,
                 periodoLetivoID: this.periodoLetivoID
-              }
-            })
-            break
+              };
+            });
+            break;
+
           case 'turma':
-            console.log(this.disciplinaCodigo)
             dataComIDs = this.data.map(item => {
-              const newItem = { ...item }
+              const newItem = { ...item };
               if ('codigodaturma' in newItem) {
-                newItem.codigo = parseInt(newItem.codigodaturma)
-                delete newItem.codigodaturma
+                newItem.codigo = parseInt(newItem.codigodaturma);
+                delete newItem.codigodaturma;
               }
               if ('turno' in newItem) {
-                newItem.turno = newItem.turno.toUpperCase().replace('Ã', 'A')
-                console.log(newItem.turno)
+                newItem.turno = newItem.turno.toUpperCase().replace('Ã', 'A');
               }
               if ('disciplinacodigo' in newItem) {
-                delete newItem.disciplinacodigo
-
+                delete newItem.disciplinacodigo;
               }
               return {
                 ...newItem,
                 disciplinaCodigo: this.disciplinaCodigo,
                 processoID: this.processoID,
-              }
+              };
+            });
+            break;
 
-            })
-            break
           case 'usuario':
             dataComIDs = this.data.map(item => {
-              const newItem = { ...item }
+              const newItem = { ...item };
               return {
                 ...newItem,
                 processoID: this.processoID
-              }
-            })
-            break
+              };
+            });
+            break;
+
           case 'vinculo_professor_turma':
             dataComIDs = this.data.map(item => {
-              const newItem = { ...item }
+              const newItem = { ...item };
               if ('disciplinacodigo' in newItem) {
-                newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo
-                delete newItem.disciplinacodigo
+                newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo;
+                delete newItem.disciplinacodigo;
               }
               if ('codigodaturma' in newItem) {
-                newItem.turmaID = dataTurma.data[0]._id
-                delete newItem.codigodaturma
+                newItem.turmaID = dataTurma.data[0]._id;
+                delete newItem.codigodaturma;
               }
               if ('professoresasresponsaveleismatriculaouemail' in newItem) {
-                newItem.email = newItem.professoresasresponsaveleismatriculaouemail
-                delete newItem.professoresasresponsaveleismatriculaouemail
+                newItem.email = newItem.professoresasresponsaveleismatriculaouemail;
+                delete newItem.professoresasresponsaveleismatriculaouemail;
               }
-              return {
-                ...newItem,
-              }
-            })
-            break
+              return { ...newItem };
+            });
+            break;
 
-          case 'vinculo_aluno_turma': {
+          case 'vinculo_aluno_turma':
             dataComIDs = this.data.map(item => {
-              const newItem = { ...item }
+              const newItem = { ...item };
               if ('disciplinacodigo' in newItem) {
-                newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo
-                delete newItem.disciplinacodigo
+                newItem.disciplinaID = dataTurma.data[0].disciplinaCodigo;
+                delete newItem.disciplinacodigo;
               }
               if ('codigodaturma' in newItem) {
-                newItem.turmaID = dataTurma.data[0]._id
-                delete newItem.codigodaturma
+                newItem.turmaID = dataTurma.data[0]._id;
+                delete newItem.codigodaturma;
               }
               if ('matriculaiesouemaildoaluno' in newItem) {
-                newItem.email = newItem.matriculaiesouemaildoaluno
-                delete newItem.matriculaiesouemaildoaluno
+                newItem.email = newItem.matriculaiesouemaildoaluno;
+                delete newItem.matriculaiesouemaildoaluno;
               }
-              return {
-                ...newItem,
-              }
-            })
-            break
-          }
+              return { ...newItem };
+            });
+            break;
         }
-
 
         const payloads = {
-          disciplina: { disciplinas: Array.from(dataComIDs) },
-          periodo: { periodos: Array.from(dataComIDs) },
-          turma: { turmas: Array.from(dataComIDs) },
-          usuario: { usuarios: Array.from(dataComIDs) },
-          vinculo_aluno_turma: { processoID: idprocesso, vinculos: Array.from(dataComIDs) },
-          vinculo_professor_turma: { processoID: idprocesso, vinculos: Array.from(dataComIDs) }
-        }
+          disciplina: { disciplinas: dataComIDs },
+          periodo: { periodos: dataComIDs },
+          turma: { turmas: dataComIDs },
+          usuario: { usuarios: dataComIDs },
+          vinculo_aluno_turma: { processoID: idprocesso, vinculos: dataComIDs },
+          vinculo_professor_turma: { processoID: idprocesso, vinculos: dataComIDs }
+        };
         const endpoints = {
           usuario: '/usuarios',
           disciplina: '/disciplinas',
@@ -317,22 +308,24 @@ export default {
           periodo: '/periodos',
           vinculo_aluno_turma: '/vinculos',
           vinculo_professor_turma: '/vinculos'
-        }
-
+        };
         const proxEtapa = {
           usuario: 'vinculos',
           disciplina: 'turmas',
           turma: 'usuarios'
-        }
+        };
 
+        const endpoint = endpoints[this.currentType];
+        const payload = payloads[this.currentType];
+        const proxRota = proxEtapa[this.currentType];
 
-        const proxRota = proxEtapa[this.currentType]
-        const endpoint = endpoints[this.currentType]
-        const payload = payloads[this.currentType]
-        if (!endpoint || !payload) throw new Error('Categoria de CSV não suportada.')
-        console.log('Enviando dados para:', endpoint, payload)
-        const { data } = await api.post(endpoint, payload)
-        alert('Dados enviados com sucesso!')
+        if (!endpoint || !payload) throw new Error('Categoria de CSV não suportada.');
+console.log("Payload enviado para API:", JSON.stringify(payload, null, 2));
+
+        const { data } = await api.post(endpoint, payload);
+
+        alert('Dados enviados com sucesso!');
+
         const proxProps = {
           disciplina: {
             processoId: this.processoID,
@@ -341,23 +334,44 @@ export default {
           turma: {
             processoId: this.processoID,
           },
-        }
-        const propsts = proxProps[this.currentType]
+        };
+
         if (this.categoria === 'vinculo_aluno_turma' || this.categoria === 'vinculo_professor_turma') {
-          alert('Vínculos criados com sucesso!')
+          alert('Vínculos criados com sucesso!');
         } else {
           this.$router.push({
             name: proxRota,
-            params: propsts
-          })
+            params: proxProps[this.currentType]
+          });
         }
       } catch (err) {
-        console.error(err)
-        alert('Erro ao enviar dados: ' + err.message)
+        console.error('Erro completo:', err);
+        if (err.response && err.response.status === 400) {
+          const msg = err.response.data?.message || '';
+
+          const match = msg.match(/c[oó]digos? j[aá] existem:?\s*(.*)/i);
+          if (match && match[1]) {
+            const codigosDuplicados = match[1].split(',').map(c => c.trim());
+            this.data = this.data.filter(d => !codigosDuplicados.includes(d.codigo));
+            codigosDuplicados.forEach(codigo => {
+              this.errors.push({
+                row: '-',
+                field: 'codigo',
+                message: `Código ${codigo} já existe e foi removido.`
+              });
+            });
+            alert(`Alguns códigos já existiam e foram removidos:\n${codigosDuplicados.join(', ')}`);
+          } else {
+            alert(`Erro ao enviar dados:\n${msg}`);
+          }
+        } else {
+          alert('Erro desconhecido ao enviar dados: ' + err.message);
+        }
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
+
     handleFile(file) {
       const ext = file.name.toLowerCase().split('.').pop()
       const reader = new FileReader()
@@ -589,32 +603,27 @@ tr:hover td {
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 /* Botões de paginação */
 .pagination button {
-  background: var(--cor-primaria);
-  color: var(--branco);
+  background: none;
   border: none;
-  padding: 0.6rem 1.1rem;
+  padding: 0.5rem 0.75rem;
   cursor: pointer;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1rem;
-  outline: none;
+  border-radius: 4px;
+  transition: background 0.2s;
+  background-color: #1161d8;
 }
 
-.pagination button:hover:not(:disabled),
-.pagination button:focus-visible:not(:disabled) {
-  background: #4338ca; /* tom mais escuro para hover */
+.pagination button:hover:not(:disabled) {
+  background: #0098f0;
 }
 
 .pagination button:disabled {
-  background: var(--cinza-medio);
-  color: #888;
+  opacity: 0.5;
   cursor: not-allowed;
-  opacity: 0.7;
 }
 
 /* Números de página */
@@ -624,9 +633,7 @@ tr:hover td {
 }
 
 .page-numbers button.active {
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: underline;
-  background: var(--cor-destaque);
-  color: var(--branco);
 }
 </style>

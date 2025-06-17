@@ -23,11 +23,12 @@ export default new Router({
       name: 'disciplinas',
       component: DisciplinasView
     },
-    {
-      path: '/periodo',
-      name: 'periodo',
-      component: PeriodoView
-    },
+{
+  path: '/periodo/:processoId',
+  name: 'periodo',
+  component: FormComponent,
+  props: true
+},
     {
       path: '/turmas',
       name: 'turmas',
